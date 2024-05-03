@@ -42,7 +42,7 @@ class SAR_Wiki_Crawler:
         Returns:
             bool: True si es valida, en caso contrario False
         """
-        return self.wiki_re.fullmatch(url) is not None
+        return self.wiki_re.fullmatching(url) is not None
 
 
     def get_wikipedia_entry_content(self, url: str) -> Optional[Tuple[str, List[str]]]:
@@ -128,7 +128,7 @@ class SAR_Wiki_Crawler:
         return None
 
 
-    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]:
+    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]: # ROBERTO
         """Devuelve una estructura tipo artículo a partir del text en crudo
 
         Args:
@@ -152,12 +152,45 @@ class SAR_Wiki_Crawler:
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
+        
+        # Inicialización del documento resultado
+        document = {}
 
-        document = None
+        # Utilizando la expresión regular precompilada para extraer el título y el resumen
+        match = self.title_sum_re.match(text)
+        if match:
+            document['url'] = url
+            document['title'] = match.group('title').strip()
+            document['summary'] = clean_text(match.group('summary'))
 
-        # COMPLETAR
+            # Preparar el resto del texto para la extracción de secciones
+            sections_text = match.group('rest')
+            sections = []
 
-        return document
+            # Iterar sobre cada sección utilizando otra expresión regular
+            for sec_match in self.section_re.finditer(sections_text):
+                section = {
+                    'name': sec_match.group('name').strip(),
+                    'text': clean_text(sec_match.group('text'))
+                }
+                # Procesar subsecciones si las hay
+                subsections = []
+                for subsec_match in self.subsection_re.finditer(sec_match.group('text')):
+                    subsections.append({
+                        'name': subsec_match.group('name').strip(),
+                        'text': clean_text(subsec_match.group('text'))
+                    })
+                if subsections:
+                    section['subsections'] = subsections
+                
+                sections.append(section)
+            
+            if sections:
+                document['sections'] = sections
+
+            return document
+
+        return None
 
 
     def save_documents(self,

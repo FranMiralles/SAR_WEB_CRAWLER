@@ -238,6 +238,38 @@ class SAR_Wiki_Crawler:
 
         # COMPLETAR
 
+        # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
+        while queue and total_documents_captured < document_limit and depth < max_depth_level:
+            # 1. Seleccionamos una página no seleccionada de la cola de prioridad
+            depth, _, current_url = hq.heappop(queue)
+            while current_url in visited:
+                depth, _, current_url = hq.heappop(queue)
+            visited.add(current_url)
+            
+            # 2. Descarga el contenido textual de la página y los enlaces que aparecen en ella.
+            content = self.get_wikipedia_entry_content(current_url)
+            if content is not None:
+                text, links = content
+
+                # 3. Añadir, si procede, los enlaces a la cola de páginas pendientes de procesar.
+                for link in links:
+                    if link not in visited or self.is_valid_url(link) is not False:
+                        hq.heappush(queue, link)
+
+                # 4. Analizar el contenido textual para generar el diccionario con el contenido estructurado del artículo.
+                document = self.parse_wikipedia_textual_content(text, current_url)
+                if document is not None:
+                    documents.append(document)
+                    total_documents_captured += 1
+                    # Guardar los documentos en un fichero si se alcanza el batch_size
+                    if batch_size is not None and total_documents_captured % batch_size == 0:
+                        self.save_documents(documents, base_filename, files_count + 1, total_files)
+                        documents = []
+                        files_count += 1
+                    # Terminar si se alcanza el límite de documentos a capturar
+                    if total_documents_captured >= document_limit:
+                        break
+
 
     def wikipedia_crawling_from_url(self,
         initial_url: str, document_limit: int, base_filename: str,

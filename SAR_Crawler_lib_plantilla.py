@@ -42,7 +42,7 @@ class SAR_Wiki_Crawler:
         Returns:
             bool: True si es valida, en caso contrario False
         """
-        return self.wiki_re.fullmatch(url) is not None
+        return self.wiki_re.fullmatching(url) is not None
 
 
     def get_wikipedia_entry_content(self, url: str) -> Optional[Tuple[str, List[str]]]:
@@ -128,7 +128,7 @@ class SAR_Wiki_Crawler:
         return None
 
 
-    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]:
+    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]: # ROBERTO
         """Devuelve una estructura tipo artículo a partir del text en crudo
 
         Args:
@@ -152,12 +152,45 @@ class SAR_Wiki_Crawler:
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
+        
+        # Inicialización del documento resultado
+        document = {}
 
-        document = None
+        # Utilizando la expresión regular precompilada para extraer el título y el resumen
+        match = self.title_sum_re.match(text)
+        if match:
+            document['url'] = url
+            document['title'] = match.group('title').strip()
+            document['summary'] = clean_text(match.group('summary'))
 
-        # COMPLETAR
+            # Preparar el resto del texto para la extracción de secciones
+            sections_text = match.group('rest')
+            sections = []
 
-        return document
+            # Iterar sobre cada sección utilizando otra expresión regular
+            for sec_match in self.section_re.finditer(sections_text):
+                section = {
+                    'name': sec_match.group('name').strip(),
+                    'text': clean_text(sec_match.group('text'))
+                }
+                # Procesar subsecciones si las hay
+                subsections = []
+                for subsec_match in self.subsection_re.finditer(sec_match.group('text')):
+                    subsections.append({
+                        'name': subsec_match.group('name').strip(),
+                        'text': clean_text(subsec_match.group('text'))
+                    })
+                if subsections:
+                    section['subsections'] = subsections
+                
+                sections.append(section)
+            
+            if sections:
+                document['sections'] = sections
+
+            return document
+
+        return None
 
 
     def save_documents(self,
@@ -239,11 +272,12 @@ class SAR_Wiki_Crawler:
         # COMPLETAR
 
         # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
-        while queue and total_documents_captured < document_limit and depth < max_depth_level:
+        while queue and total_documents_captured < document_limit:
+
             # 1. Seleccionamos una página no seleccionada de la cola de prioridad
-            depth, _, current_url = hq.heappop(queue)
+            depth, parent_url, current_url = hq.heappop(queue)
             while current_url in visited:
-                depth, _, current_url = hq.heappop(queue)
+                depth, parent_url, current_url = hq.heappop(queue)
             visited.add(current_url)
             
             # 2. Descarga el contenido textual de la página y los enlaces que aparecen en ella.
@@ -253,8 +287,10 @@ class SAR_Wiki_Crawler:
 
                 # 3. Añadir, si procede, los enlaces a la cola de páginas pendientes de procesar.
                 for link in links:
-                    if link not in visited or self.is_valid_url(link) is not False:
-                        hq.heappush(queue, link)
+                    #tranformar en absoluta
+                    absolute_url = urljoin(current_url, link)
+                    if absolute_url not in visited and self.is_valid_url(absolute_url) is not False and depth <= max_depth_level:
+                        hq.heappush(queue, (depth +1, current_url, absolute_url))
 
                 # 4. Analizar el contenido textual para generar el diccionario con el contenido estructurado del artículo.
                 document = self.parse_wikipedia_textual_content(text, current_url)
@@ -263,12 +299,9 @@ class SAR_Wiki_Crawler:
                     total_documents_captured += 1
                     # Guardar los documentos en un fichero si se alcanza el batch_size
                     if batch_size is not None and total_documents_captured % batch_size == 0:
-                        self.save_documents(documents, base_filename, files_count + 1, total_files)
-                        documents = []
                         files_count += 1
-                    # Terminar si se alcanza el límite de documentos a capturar
-                    if total_documents_captured >= document_limit:
-                        break
+                        self.save_documents(documents, base_filename, files_count, total_files)
+                        documents = []
 
 
     def wikipedia_crawling_from_url(self,

@@ -387,7 +387,7 @@ class SAR_Indexer:
     ###################################
 
 
-    def solve_query(self, query:str, prev:Dict={}):
+    def solve_query(self, query:str, prev:Dict={}): # FRAN
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -402,6 +402,9 @@ class SAR_Indexer:
         return: posting list con el resultado de la query
 
         """
+        
+        # 
+
 
         if query is None or len(query) == 0:
             return []
@@ -413,7 +416,7 @@ class SAR_Indexer:
 
 
 
-    def get_posting(self, term:str, field:Optional[str]=None):
+    def get_posting(self, term:str, field:Optional[str]=None): # FRAN
         """
 
         Devuelve la posting list asociada a un termino. 
@@ -438,7 +441,7 @@ class SAR_Indexer:
 
 
 
-    def get_positionals(self, terms:str, index):
+    def get_positionals(self, terms:str, index): # FRAN
         """
 
         Devuelve la posting list asociada a una secuencia de terminos consecutivos.
@@ -456,7 +459,7 @@ class SAR_Indexer:
         ########################################################
 
 
-    def get_stemming(self, term:str, field: Optional[str]=None):
+    def get_stemming(self, term:str, field: Optional[str]=None): # FRAN
         """
 
         Devuelve la posting list asociada al stem de un termino.
@@ -495,7 +498,7 @@ class SAR_Indexer:
 
 
 
-    def reverse_posting(self, p:list):
+    def reverse_posting(self, p:list): # FRAN
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -517,7 +520,7 @@ class SAR_Indexer:
 
 
 
-    def and_posting(self, p1:list, p2:list):
+    def and_posting(self, p1:list, p2:list):# FRAN
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -530,14 +533,31 @@ class SAR_Indexer:
 
         """
         
-        pass
+        # COMPLETADO
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
+        p1.sort()
+        p1 = list(set(p1))
+        p2.sort()
+        p2 = list(set(p2))
+        p3:list = []
+        while len(p1) != 0 and len(p2) != 0:
+            if(p1[0] == p2[0]):
+                p3.append(p1[0])
+                p1.pop(0)
+                p2.pop(0)
+            else:
+                if(p1[0] < p2[0]):
+                    p1.pop(0)
+                else:
+                    p2.pop(0)
+
+        return p3
 
 
 
-    def or_posting(self, p1:list, p2:list):
+    def or_posting(self, p1:list, p2:list): # FRAN
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -549,11 +569,35 @@ class SAR_Indexer:
         return: posting list con los artid incluidos de p1 o p2
 
         """
-
-        pass
+        # COMPLETADO
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
+        p1.sort()
+        p1 = list(set(p1))
+        p2.sort()
+        p2 = list(set(p2))
+        p3:list = []
+        while len(p1) != 0 and len(p2) != 0:
+            if(p1[0] == p2[0]):
+                p3.append(p1[0])
+                p1.pop(0)
+                p2.pop(0)
+            else:
+                if(p1[0] < p2[0]):
+                    p3.append(p1[0])
+                    p1.pop(0)
+                else:
+                    p3.append(p2[0])
+                    p2.pop(0)
+        while len(p1) != 0:
+            p3.append(p1[0])
+            p1.pop(0)
+        while len(p2) != 0:
+            p3.append(p2[0])
+            p2.pop(0)
+
+        return p3
 
 
     def minus_posting(self, p1, p2):
@@ -571,10 +615,30 @@ class SAR_Indexer:
         """
 
         
-        pass
+        
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
+        p1.sort()
+        p1 = list(set(p1))
+        p2.sort()
+        p2 = list(set(p2))
+        p3:list = []
+        while len(p1) != 0 and len(p2) != 0:
+            if(p1[0] < p2[0]):
+                p3.append(p1[0])
+                p1.pop(0)
+            else:
+                if(p1[0] > p2[0]):
+                    p2.pop(0)
+                else:
+                    p1.pop(0)
+                    p2.pop(0)
+        while len(p1) != 0:
+            p3.append(p1[0])
+            p1.pop(0)
+
+        return p3
 
 
 

@@ -218,7 +218,7 @@ class SAR_Indexer:
         return article
                 
     
-    def index_file(self, filename:str):
+    def index_file(self, filename:str): #CARLOS
         """
 
         Indexa el contenido de un fichero.
@@ -228,14 +228,53 @@ class SAR_Indexer:
 
         NECESARIO PARA TODAS LAS VERSIONES
 
-        dependiendo del valor de self.multifield y self.positional se debe ampliar el indexado
-
+        dependiendo del valor de self.multifield y self.positional se debe ampliar el indexado,
+        en el caso de positional se debe indexar la posición de las palabras, en el caso de multifield
+        se deben indexar todos los campos.
 
         """
         for i, line in enumerate(open(filename)):
-            j = self.parse_article(line)
+            j = self.parse_article(line)  # Parsear el artículo
+            if self.already_in_index(line):  # Verificar si el artículo ya está indexado
+                continue  # Si está indexado, pasar al siguiente artículo
 
+            # Indexar el contenido del artículo
 
+            #TOKENIZE
+            content = j['all']  # Obtener el contenido del artículo
+            tokens = self.tokenize(content)  # Tokenizar el contenido
+
+            #ASIGN UNIQUE DOC IDS
+            docId = len(self.docs)  # ID único para el documento
+            self.docs[docId] = filename
+
+            #ASIIGN UNIQUE ARTICLE IDS
+            articleId = len(self.articles)
+            self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+
+            #CREATE AN INVERTED INDEX ACCESIBLE BY TOKEN, Cada entrada contendra ́ una lista con los art ́ıculos en los que aparece ese t ́ermino.
+            if self.multifield:
+                for field, tokenize in self.fields:
+                    if tokenize:
+                        tokens = self.tokenize(j[field])
+                    else:
+                        tokens = [j[field]]
+                    for token in tokens:
+                        if self.use_stemming:
+                            token = self.make_stemming(token)
+                        if token not in self.index:
+                            self.index[token] = []
+                        self.index[token].append(articleId)
+            else:
+                content = j[self.def_field]
+                tokens = self.tokenize(content)
+                for token in tokens:
+                    if self.use_stemming:
+                        token = self.make_stemming(token)
+                    if token not in self.index:
+                        self.index[token] = []
+                    self.index[token].append(articleId)
+        
         #
         # 
         # En la version basica solo se debe indexar el contenido "article"
@@ -278,7 +317,7 @@ class SAR_Indexer:
         return self.tokenizer.sub(' ', text.lower()).split()
 
 
-    def make_stemming(self):
+    def make_stemming(self): #CARLOS
         """
 
         Crea el indice de stemming (self.sindex) para los terminos de todos los indices.
@@ -290,41 +329,46 @@ class SAR_Indexer:
 
         """
         
-        pass
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        self.sindex = {}
+        for term in self.index:
+            stemmed_term = self.stemmer.stem(term)
+            if stemmed_term not in self.sindex:
+                self.sindex[stemmed_term] = set()
+            self.sindex[stemmed_term].update(self.index[term])
 
 
     
-    def make_permuterm(self):
+    def make_permuterm(self): #CARLOS
         """
-
         Crea el indice permuterm (self.ptindex) para los terminos de todos los indices.
 
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
-
-
         """
-        pass
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+
+        self.ptindex = {}
+        for term in self.index:
+            # Generate all possible rotations of the term
+            rotations = [term[i:] + term[:i] for i in range(len(term))]
+            # Add the rotations to the permuterm index
+            for rotation in rotations:
+                if rotation not in self.ptindex:
+                    self.ptindex[rotation] = set()
+                self.ptindex[rotation].add(term)
 
 
 
 
-    def show_stats(self):
+    def show_stats(self): #CARLOS
         """
-        NECESARIO PARA TODAS LAS VERSIONES
-        
-        Muestra estadisticas de los indices
-        
+        Muestra estadisticas de los indices.
         """
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        print("Number of URLs indexed:", len(self.urls))
+        print("Number of documents indexed:", len(self.docs))
+        print("Number of unique terms:", len(self.index))
+        print("Number of stemmed terms:", len(self.sindex))
+        print("Number of permuterm terms:", len(self.ptindex))
+        print("Number of articles indexed:", len(self.articles))
+        print("Indexing fields:", [field[0] for field in self.fields])
 
         
 

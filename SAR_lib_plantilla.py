@@ -478,7 +478,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
         ####################################################
 
-    def get_permuterm(self, term:str, field:Optional[str]=None):
+    def get_permuterm(self, term:str, field:Optional[str]=None): # ROBERTO
         """
 
         Devuelve la posting list asociada a un termino utilizando el indice permuterm.
@@ -682,7 +682,7 @@ class SAR_Indexer:
         return not errors
 
 
-    def solve_and_show(self, query:str):
+    def solve_and_show(self, query:str): # ROBERTO
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -693,10 +693,11 @@ class SAR_Indexer:
         return: el numero de artículo recuperadas, para la opcion -T
 
         """
-        pass
+        
         ################
         ## COMPLETAR  ##
         ################
+        
 
 
 

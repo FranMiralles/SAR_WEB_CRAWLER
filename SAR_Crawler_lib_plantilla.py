@@ -160,7 +160,9 @@ class SAR_Wiki_Crawler:
         match = self.title_sum_re.match(text)
         if match:
             document['url'] = url
+            # Extraer el título y el resumen y limpiarlos
             document['title'] = match.group('title').strip()
+            # Si no hay resumen, se asigna una cadena vacía
             document['summary'] = clean_text(match.group('summary'))
 
             # Preparar el resto del texto para la extracción de secciones

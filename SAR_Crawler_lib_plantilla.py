@@ -276,7 +276,7 @@ class SAR_Wiki_Crawler:
         # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
         while queue and total_documents_captured < document_limit:
 
-            # 1. Seleccionamos una página no seleccionada de la cola de prioridad
+            # 1. Seleccionamos una página no procesada de la cola de prioridad
             depth, parent_url, current_url = hq.heappop(queue)
             while current_url in visited:
                 depth, parent_url, current_url = hq.heappop(queue)
@@ -289,10 +289,14 @@ class SAR_Wiki_Crawler:
 
                 # 3. Añadir, si procede, los enlaces a la cola de páginas pendientes de procesar.
                 for link in links:
-                    #tranformar en absoluta
+                    # Tranformar en absoluta
                     absolute_url = urljoin(current_url, link)
-                    if absolute_url not in visited and self.is_valid_url(absolute_url) is not False and depth <= max_depth_level:
-                        hq.heappush(queue, (depth +1, current_url, absolute_url))
+                    # Es válida y no supera la profundidad máxima
+                    if self.is_valid_url(absolute_url) is not False and depth <= max_depth_level:
+                        # No se ha visitado y no se ha añadido para profesar
+                        if  absolute_url not in visited and absolute_url not in to_process:
+                            to_process.add(absolute_url)
+                            hq.heappush(queue, (depth +1, current_url, absolute_url))
 
                 # 4. Analizar el contenido textual para generar el diccionario con el contenido estructurado del artículo.
                 document = self.parse_wikipedia_textual_content(text, current_url)

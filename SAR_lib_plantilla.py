@@ -156,7 +156,7 @@ class SAR_Indexer:
         return article['url'] in self.urls
 
 
-    def index_dir(self, root:str, **args):
+    def index_dir(self, root:str, **args): # DAVID
         """
         
         Recorre recursivamente el directorio o fichero "root" 
@@ -387,7 +387,8 @@ class SAR_Indexer:
     ###################################
 
 
-    def solve_query(self, query:str, prev:Dict={}): # FRAN
+
+    def solve_query(self, query:str, prev:Dict={}): #David
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -396,23 +397,86 @@ class SAR_Indexer:
 
 
         param:  "query": cadena con la query
-                "prev": incluido por si se quiere hacer una version recursiva. No es necesario utilizarlo.
+            "prev": incluido por si se quiere hacer una version recursiva. No es necesario utilizarlo.
 
 
         return: posting list con el resultado de la query
 
         """
-        
-        # 
-
 
         if query is None or len(query) == 0:
             return []
 
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        # Tokenizar la consulta
+        tokens = self.tokenize(query)
 
+        # Pilas para operadores y operandos
+        operator_stack = []
+        operand_stack = []
+
+        # Iterar sobre los tokens
+        for i, token in tokens:
+            if token == '(':
+                operator_stack.append(token)
+            elif token == ')':
+                # Procesar los tokens hasta encontrar el '('
+                while operator_stack and operator_stack[-1] != '(':
+                    operator = operator_stack.pop()
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
+                    result = self.evaluate(operator, operand1, operand2)
+                    operand_stack.append(result)
+                # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
+                if operator_stack and operator_stack[-1] == '(':
+                    operator_stack.pop()
+            elif token in ['AND', 'OR']:
+                # Procesar los tokens con mayor prioridad
+                while operator_stack and operator_stack[-1] != '(':
+                    operator = operator_stack.pop()
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
+                    result = self.evaluate(operator, operand1, operand2)
+                    operand_stack.append(result)
+                # Añade el operador a la pila de operadores
+                operator_stack.append(token)
+            elif token == 'NOT':
+                # NOT seguido de una subexpresión
+                if tokens[i+1] == '(':  # NOT seguido de una subexpresión
+                    operator_stack.append('NOT')
+                else:
+                    operand = operand_stack.pop()
+                    result = self.reverse_posting(operand)
+                    operand_stack.append(result)
+            else:
+                # Añade el término a la pila de operandos
+                operand_stack.append(self.get_posting(token))
+
+        # Procesar el resto de tokens
+        while operator_stack:
+            operator = operator_stack.pop()
+            if operator == 'NOT':
+                operand = operand_stack.pop()
+                result = self.reverse_posting(operand)
+                operand_stack.append(result)
+            else:
+                operand2 = operand_stack.pop()
+                operand1 = operand_stack.pop()
+                result = self.evaluate(operator, operand1, operand2)
+                operand_stack.append(result)
+            result = self.evaluate(operator, operand1, operand2)
+            operand_stack.append(result)
+
+        # Devolver el resultado
+        return operand_stack[-1] if operand_stack else []
+        
+
+    def evaluate(self, operator:str, operand1:List, operand2:List) -> List:
+        if operator == 'AND':
+            return self.and_posting(operand1, operand2)
+        elif operator == 'OR':
+            return self.or_posting(operand1, operand2)
+        else:
+            raise ValueError(f"Invalid operator: {operator}")
 
 
 
@@ -600,7 +664,7 @@ class SAR_Indexer:
         return p3
 
 
-    def minus_posting(self, p1, p2):
+    def minus_posting(self, p1, p2): # FRAN
         """
         OPCIONAL PARA TODAS LAS VERSIONES
 

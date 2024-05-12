@@ -277,7 +277,7 @@ class SAR_Indexer:
         
         #
         # 
-        # En la version basica solo se debe indexar el contenido "article"
+        # En la version basica solo se debe indexar el contenido "all"
         #
         #
         #

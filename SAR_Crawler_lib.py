@@ -33,7 +33,7 @@ class SAR_Wiki_Crawler:
         self.subsection_re = re.compile(r"--(?P<name>.+)--\n(?P<text>(.+|\n)*)")
 
 
-    def is_valid_url(self, url: str) -> bool:
+    def is_valid_url(self, url: str) -> bool:   # fullmatching cambiado por fullmatch
         """Verifica si es una dirección válida para indexar
 
         Args:
@@ -42,7 +42,7 @@ class SAR_Wiki_Crawler:
         Returns:
             bool: True si es valida, en caso contrario False
         """
-        return self.wiki_re.fullmatching(url) is not None
+        return self.wiki_re.fullmatch(url) is not None
 
 
     def get_wikipedia_entry_content(self, url: str) -> Optional[Tuple[str, List[str]]]:
@@ -162,8 +162,7 @@ class SAR_Wiki_Crawler:
             document['url'] = url
             # Extraer el título y el resumen y limpiarlos
             document['title'] = match.group('title').strip()
-            # Si no hay resumen, se asigna una cadena vacía
-            document['summary'] = clean_text(match.group('summary'))
+            document['summary'] = match.group('summary')  # Mantener los espacios en blanco iniciales
 
             # Preparar el resto del texto para la extracción de secciones
             sections_text = match.group('rest')
@@ -189,7 +188,7 @@ class SAR_Wiki_Crawler:
             
             if sections:
                 document['sections'] = sections
-
+            
             return document
 
         return None

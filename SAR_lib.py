@@ -233,47 +233,30 @@ class SAR_Indexer:
         se deben indexar todos los campos.
 
         """
+
+        #ASIGN UNIQUE DOC IDS
+        docId = len(self.docs)  # ID único para el documento
+        self.docs[docId] = filename
+
         for i, line in enumerate(open(filename)):
-            j = self.parse_article(line)  # Parsear el artículo
+            j = self.parse_article(line)  # Parsear el artículo, nos devuelve un diccionario con las siguientes claves: 'url', 'title', 'summary', 'all', 'section-name'
             if self.already_in_index(line):  # Verificar si el artículo ya está indexado
                 continue  # Si está indexado, pasar al siguiente artículo
 
-            # Indexar el contenido del artículo
-
             #TOKENIZE
             content = j['all']  # Obtener el contenido del artículo
-            tokens = self.tokenize(content)  # Tokenizar el contenido
-
-            #ASIGN UNIQUE DOC IDS
-            docId = len(self.docs)  # ID único para el documento
-            self.docs[docId] = filename
+            tokens = self.tokenize(content)  # Tokenizar el contenido eliminando simbolos no alfanumericos y dividientola por espacios.
 
             #ASIIGN UNIQUE ARTICLE IDS
             articleId = len(self.articles)
             self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+            
+            #INDEXAR
+            for token in tokens:
+                if token not in self.index:
+                    self.index[token] = set()
+                self.index[token].add(articleId) 
 
-            #CREATE AN INVERTED INDEX ACCESIBLE BY TOKEN, Cada entrada contendra ́ una lista con los art ́ıculos en los que aparece ese t ́ermino.
-            if self.multifield:
-                for field, tokenize in self.fields:
-                    if tokenize:
-                        tokens = self.tokenize(j[field])
-                    else:
-                        tokens = [j[field]]
-                    for token in tokens:
-                        if self.use_stemming:
-                            token = self.make_stemming(token)
-                        if token not in self.index:
-                            self.index[token] = []
-                        self.index[token].append(articleId)
-            else:
-                content = j[self.def_field]
-                tokens = self.tokenize(content)
-                for token in tokens:
-                    if self.use_stemming:
-                        token = self.make_stemming(token)
-                    if token not in self.index:
-                        self.index[token] = []
-                    self.index[token].append(articleId)
         
         #
         # 

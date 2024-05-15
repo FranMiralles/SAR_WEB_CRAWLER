@@ -272,6 +272,10 @@ class SAR_Wiki_Crawler:
 
         # COMPLETAR
 
+        # Comprobamos que el nombre del fichero termine en .json
+        if not base_filename.endswith(".json"):
+            raise ValueError("El nombre del archivo debe terminar con .json")
+
         # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
         while queue and total_documents_captured < document_limit:
 
@@ -280,14 +284,14 @@ class SAR_Wiki_Crawler:
             while current_url in visited:
                 depth, parent_url, current_url = hq.heappop(queue)
             visited.add(current_url)
-            
+            print('he visitado con profundidad', depth, current_url)
             # 2. Descarga el contenido textual de la página y los enlaces que aparecen en ella.
             content = self.get_wikipedia_entry_content(current_url)
-            if content is not None:
+        if content is not None:
                 text, links = content
-
                 # 3. Añadir, si procede, los enlaces a la cola de páginas pendientes de procesar.
                 for link in links:
+                    print('mis links son', links)
                     # Tranformar en absoluta
                     absolute_url = urljoin(current_url, link)
                     # Es válida y no supera la profundidad máxima
@@ -296,6 +300,7 @@ class SAR_Wiki_Crawler:
                         if  absolute_url not in visited and absolute_url not in to_process:
                             to_process.add(absolute_url)
                             hq.heappush(queue, (depth +1, current_url, absolute_url))
+
 
                 # 4. Analizar el contenido textual para generar el diccionario con el contenido estructurado del artículo.
                 document = self.parse_wikipedia_textual_content(text, current_url)

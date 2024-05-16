@@ -157,7 +157,7 @@ class SAR_Indexer:
         return article['url'] in self.urls
 
 
-    def index_dir(self, root:str, **args): # DAVID
+    def index_dir(self, root:str, **args): # alguien
         """
         
         Recorre recursivamente el directorio o fichero "root" 
@@ -225,9 +225,8 @@ class SAR_Indexer:
         return article
                 
     
-    def index_file(self, filename:str): #CARLOS
+    def index_file(self, filename: str):
         """
-
         Indexa el contenido de un fichero.
         
         input: "filename" es el nombre de un fichero generado por el Crawler cada línea es un objeto json
@@ -238,37 +237,78 @@ class SAR_Indexer:
         dependiendo del valor de self.multifield y self.positional se debe ampliar el indexado,
         en el caso de positional se debe indexar la posición de las palabras, en el caso de multifield
         se deben indexar todos los campos.
-
         """
 
-        #ASIGN UNIQUE DOC IDS
-        docId = len(self.docs)  # ID único para el documento
+        # Asignar ID único para el documento
+        docId = len(self.docs)
         self.docs[docId] = filename
+        if 'all' not in self.index:
+            self.index['all'] = {}
 
-        for i, line in enumerate(open(filename)):
-            j = self.parse_article(line)  # Parsear el artículo, nos devuelve un diccionario con las siguientes claves: 'url', 'title', 'summary', 'all', 'section-name'
-            if self.already_in_index(line):  # Verificar si el artículo ya está indexado
-                continue  # Si está indexado, pasar al siguiente artículo
+        with open(filename, 'r', encoding='utf-8') as file:
+            for line in file:
+                j = self.parse_article(line)  # Parsear el artículo
+                if self.already_in_index(j):  # Verificar si el artículo ya está indexado
+                    continue
 
-            #TOKENIZE
-            content = j['all']  # Obtener el contenido del artículo
-            tokens = self.tokenize(content)  # Tokenizar el contenido eliminando simbolos no alfanumericos y dividientola por espacios.
+                # Tokenizar el contenido del artículo
+                content = j['all']
+                tokens = self.tokenize(content)
 
-            #ASIIGN UNIQUE ARTICLE IDS
-            articleId = len(self.articles)
-            self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
-            
-            #INDEXAR
-            for token in tokens:
-                if token not in self.index:
-                    self.index[token] = set()
-                self.index[token].add(articleId) 
+                #print(f"Indexing {j['title']} with {len(tokens)} tokens")
 
-        
-        #
-        # 
-        # En la version basica solo se debe indexar el contenido "all"
-        #
+                # Asignar ID único para el artículo
+                articleId = len(self.articles)
+                self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+
+                # Indexar los tokens
+                if self.positional:
+                        
+                    if self.multifield:
+                        for field, tokenize in self.fields:
+                                if field not in self.index:
+                                    self.index[field] = {}
+                                    
+                                content = j[field]
+                                tokens = self.tokenize(content)
+
+                                for i, token in tokens:
+                                    if token not in self.index[field]:
+                                        self.index[field][token] = set()
+                                    self.index[field][token].add((articleId, i))
+                     
+                    else:   
+                        for i, token in enumerate(tokens):
+                            if token not in self.index['all']:
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add((articleId, i))
+                else:
+                    if self.multifield:
+                        for field, tokenize in self.fields:
+                                if field not in self.index:
+                                    self.index[field] = {}
+                                    
+                                content = j[field] 
+                                tokens = self.tokenize(content)
+
+                                for token in tokens:
+                                    if token not in self.index[field]:
+                                        self.index[field][token] = set()
+                                    self.index[field][token].add(articleId)
+
+                    else:
+                        for token in tokens:
+                            if token not in self.index['all']:
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add(articleId)
+
+                self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
+
+        print(f"Indexed {filename} with {len(self.articles)} articles and {sum(len(postings) for postings in self.index['all'].values())} total tokens.")
+
+            # 
+            # En la version basica solo se debe indexar el contenido "all"
+            #
         #
         #
         #################
@@ -352,15 +392,28 @@ class SAR_Indexer:
         """
         Muestra estadisticas de los indices.
         """
-        print("Number of URLs indexed:", len(self.urls))
-        print("Number of documents indexed:", len(self.docs))
-        print("Number of unique terms:", len(self.index))
-        print("Number of stemmed terms:", len(self.sindex))
-        print("Number of permuterm terms:", len(self.ptindex))
-        print("Number of articles indexed:", len(self.articles))
-        print("Indexing fields:", [field[0] for field in self.fields])
+        print("========================================")
+        print(f"Number of indexed files: {len(self.docs)}")
+        print("----------------------------------------")
+        print(f"Number of indexed articles: {len(self.articles)}")
+        print("----------------------------------------")
+        print("TOKENS:")
+        if self.multifield:
+            for field, tokenize in self.fields:
+                    tokens = len(self.index[field])
+                    print(f"\t# of tokens in '{field}': {tokens}")
+        else:
+            tokens = len(self.index['all'])
+            print(f"\t# of tokens in 'all': {tokens}")
+        print("----------------------------------------")
+        print("Positional queries are NOT allowed.")
+        print("========================================")
 
         
+        #Let's print the inverted index
+        #print("Inverted index:")
+        #for term, posting in self.index['all'].items():
+            #print(f"{term}: {posting}")
 
 
 
@@ -398,7 +451,11 @@ class SAR_Indexer:
             return []
         
         tokens = []
-        elements = self.normalize_query(query)
+
+        # Normalizar la consulta
+        elements = self.normalize_query(self, query)
+
+        # Obtener las posting lists de los términos
         for element in elements:
             if element not in ['AND', 'OR', 'NOT', '(', ')']:
                 tokens.append(self.get_posting(element))
@@ -409,8 +466,9 @@ class SAR_Indexer:
         operator_stack = []
         operand_stack = []
 
+        i = 0
         # Iterar sobre los tokens
-        for i, token in tokens:
+        for token in tokens:
             if token == '(':
                 operator_stack.append(token)
             elif token == ')':
@@ -419,7 +477,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(operator, operand1, operand2)
+                    result = self.evaluate(self, operator, operand1, operand2)
                     operand_stack.append(result)
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
                 if operator_stack and operator_stack[-1] == '(':
@@ -430,7 +488,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(operator, operand1, operand2)
+                    result = self.evaluate(self, operator, operand1, operand2)
                     operand_stack.append(result)
                 # Añade el operador a la pila de operadores
                 operator_stack.append(token)
@@ -439,31 +497,32 @@ class SAR_Indexer:
                 if tokens[i+1] == '(':  
                     operator_stack.append('NOT')
                 else:
-                    operand = operand_stack.pop()
-                    result = self.reverse_posting(operand)
+                    operand = tokens.pop(i+1)
+                    result = self.reverse_posting(self, operand)
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(self.get_posting(token))
+                operand_stack.append(self.get_posting(self, token))
+            i += 1    
 
         # Procesar el resto de tokens
         while operator_stack:
             operator = operator_stack.pop()
             if operator == 'NOT':
                 operand = operand_stack.pop()
-                result = self.reverse_posting(operand)
+                result = self.reverse_posting(self, operand)
                 operand_stack.append(result)
             else:
-                operand2 = operand_stack.pop().get_posting()
-                operand1 = operand_stack.pop().get_posting()
-                result = self.evaluate(operator, operand1, operand2)
+                operand2 = operand_stack.pop()
+                operand1 = operand_stack.pop()
+                result = self.evaluate(self, operator, operand1, operand2)
                 operand_stack.append(result)
 
         # Devolver el resultado
         return operand_stack[-1] if operand_stack else []
         
 
-    def evaluate(self, operator:str, operand1:List, operand2:List) -> List:
+    def evaluate(self, operator:str, operand1:List, operand2:List) -> List: #David
             """
             Evalúa el operador dado en los dos operandos y devuelve el resultado.
 
@@ -479,13 +538,13 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(self.index.get(operand1, []), self.index.get(operand2, []))
+                return self.and_posting(self, operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(self.index.get(operand1, []), self.index.get(operand2, []))
+                return self.or_posting(self, operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
         
-    def normalize_query(self, query:str) -> List[str]:
+    def normalize_query(self, query:str) -> List[str]: #David
         """
         Normaliza la consulta
 
@@ -495,37 +554,43 @@ class SAR_Indexer:
         Returns:
             List[str]: lista de tokens
         """
-        element = ''
-        result = []
-        missing = False
+        current_word = ''  # Variable para almacenar la palabra actual
+        result = []  # Lista para almacenar los resultados
+        opened_quotes = False  # Flag para indicar si estamos dentro de comillas
 
         for character in query:
-            if character == '"' and not missing:
-                missing = True
-            elif character == '"' and missing:
-                missing = False
-                if element:  
-                    result.append(element)
-                element = ''
-            elif character == ' ' and missing:
-                element += character
-            elif character == ' ' and not missing:
-                if element:  
-                    result.append(element)
-                element = ''
+            if character == '"' and not opened_quotes:
+                # Si encontramos una comilla de apertura
+                opened_quotes = True
+            elif character == '"' and opened_quotes:
+                # Si encontramos una comilla de cierre
+                opened_quotes = False
+                if current_word:  # Agregar la palabra actual si no está vacía
+                    result.append(current_word)
+                current_word = ''
+            elif character == ' ' and opened_quotes:
+                # Agregar espacios dentro de comillas a la palabra actual
+                current_word += character
+            elif character == ' ' and not opened_quotes:
+                # Agregar la palabra actual si no estamos dentro de comillas
+                if current_word:  # Agregar la palabra actual si no está vacía
+                    result.append(current_word)
+                current_word = ''
             elif character == '(' or character == ')':
-                if element: 
-                    result.append(element)
+                # Si encontramos un paréntesis, agregar la palabra actual y el paréntesis
+                if current_word:  # Agregar la palabra actual si no está vacía
+                    result.append(current_word)
                 result.append(character)
-                element = ''
+                current_word = ''
             else:
-                element += character
+                # Agregar el carácter actual a la palabra actual
+                current_word += character
 
-        if element:
-            result.append(element)
+            # Agregar la última palabra 
+            if current_word:
+                result.append(current_word)
 
-        return result
-
+            return result
 
 
 

@@ -33,7 +33,7 @@ class SAR_Wiki_Crawler:
         self.subsection_re = re.compile(r"--(?P<name>.+)--\n(?P<text>(.+|\n)*)")
 
 
-    def is_valid_url(self, url: str) -> bool:
+    def is_valid_url(self, url: str) -> bool:   # fullmatching cambiado por fullmatch
         """Verifica si es una dirección válida para indexar
 
         Args:
@@ -42,7 +42,7 @@ class SAR_Wiki_Crawler:
         Returns:
             bool: True si es valida, en caso contrario False
         """
-        return self.wiki_re.fullmatching(url) is not None
+        return self.wiki_re.fullmatch(url) is not None
 
 
     def get_wikipedia_entry_content(self, url: str) -> Optional[Tuple[str, List[str]]]:
@@ -162,8 +162,7 @@ class SAR_Wiki_Crawler:
             document['url'] = url
             # Extraer el título y el resumen y limpiarlos
             document['title'] = match.group('title').strip()
-            # Si no hay resumen, se asigna una cadena vacía
-            document['summary'] = clean_text(match.group('summary'))
+            document['summary'] = match.group('summary')  # Mantener los espacios en blanco iniciales
 
             # Preparar el resto del texto para la extracción de secciones
             sections_text = match.group('rest')
@@ -189,7 +188,7 @@ class SAR_Wiki_Crawler:
             
             if sections:
                 document['sections'] = sections
-
+            
             return document
 
         return None
@@ -273,26 +272,35 @@ class SAR_Wiki_Crawler:
 
         # COMPLETAR
 
+        # Comprobamos que el nombre del fichero termine en .json
+        if not base_filename.endswith(".json"):
+            raise ValueError("El nombre del archivo debe terminar con .json")
+
         # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
         while queue and total_documents_captured < document_limit:
 
-            # 1. Seleccionamos una página no seleccionada de la cola de prioridad
+            # 1. Seleccionamos una página no procesada de la cola de prioridad
             depth, parent_url, current_url = hq.heappop(queue)
             while current_url in visited:
                 depth, parent_url, current_url = hq.heappop(queue)
             visited.add(current_url)
-            
+            print('he visitado con profundidad', depth, current_url)
             # 2. Descarga el contenido textual de la página y los enlaces que aparecen en ella.
             content = self.get_wikipedia_entry_content(current_url)
-            if content is not None:
+        if content is not None:
                 text, links = content
-
                 # 3. Añadir, si procede, los enlaces a la cola de páginas pendientes de procesar.
                 for link in links:
-                    #tranformar en absoluta
+                    print('mis links son', links)
+                    # Tranformar en absoluta
                     absolute_url = urljoin(current_url, link)
-                    if absolute_url not in visited and self.is_valid_url(absolute_url) is not False and depth <= max_depth_level:
-                        hq.heappush(queue, (depth +1, current_url, absolute_url))
+                    # Es válida y no supera la profundidad máxima
+                    if self.is_valid_url(absolute_url) is not False and depth <= max_depth_level:
+                        # No se ha visitado y no se ha añadido para profesar
+                        if  absolute_url not in visited and absolute_url not in to_process:
+                            to_process.add(absolute_url)
+                            hq.heappush(queue, (depth +1, current_url, absolute_url))
+
 
                 # 4. Analizar el contenido textual para generar el diccionario con el contenido estructurado del artículo.
                 document = self.parse_wikipedia_textual_content(text, current_url)

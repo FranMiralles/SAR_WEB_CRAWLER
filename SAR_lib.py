@@ -7,6 +7,7 @@ import math
 from pathlib import Path
 from typing import Optional, List, Union, Dict
 import pickle
+import re
 
 class SAR_Indexer:
     """
@@ -156,7 +157,7 @@ class SAR_Indexer:
         return article['url'] in self.urls
 
 
-    def index_dir(self, root:str, **args):
+    def index_dir(self, root:str, **args): # DAVID
         """
         
         Recorre recursivamente el directorio o fichero "root" 
@@ -233,51 +234,34 @@ class SAR_Indexer:
         se deben indexar todos los campos.
 
         """
+
+        #ASIGN UNIQUE DOC IDS
+        docId = len(self.docs)  # ID único para el documento
+        self.docs[docId] = filename
+
         for i, line in enumerate(open(filename)):
-            j = self.parse_article(line)  # Parsear el artículo
+            j = self.parse_article(line)  # Parsear el artículo, nos devuelve un diccionario con las siguientes claves: 'url', 'title', 'summary', 'all', 'section-name'
             if self.already_in_index(line):  # Verificar si el artículo ya está indexado
                 continue  # Si está indexado, pasar al siguiente artículo
 
-            # Indexar el contenido del artículo
-
             #TOKENIZE
             content = j['all']  # Obtener el contenido del artículo
-            tokens = self.tokenize(content)  # Tokenizar el contenido
-
-            #ASIGN UNIQUE DOC IDS
-            docId = len(self.docs)  # ID único para el documento
-            self.docs[docId] = filename
+            tokens = self.tokenize(content)  # Tokenizar el contenido eliminando simbolos no alfanumericos y dividientola por espacios.
 
             #ASIIGN UNIQUE ARTICLE IDS
             articleId = len(self.articles)
             self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+            
+            #INDEXAR
+            for token in tokens:
+                if token not in self.index:
+                    self.index[token] = set()
+                self.index[token].add(articleId) 
 
-            #CREATE AN INVERTED INDEX ACCESIBLE BY TOKEN, Cada entrada contendra ́ una lista con los art ́ıculos en los que aparece ese t ́ermino.
-            if self.multifield:
-                for field, tokenize in self.fields:
-                    if tokenize:
-                        tokens = self.tokenize(j[field])
-                    else:
-                        tokens = [j[field]]
-                    for token in tokens:
-                        if self.use_stemming:
-                            token = self.make_stemming(token)
-                        if token not in self.index:
-                            self.index[token] = []
-                        self.index[token].append(articleId)
-            else:
-                content = j[self.def_field]
-                tokens = self.tokenize(content)
-                for token in tokens:
-                    if self.use_stemming:
-                        token = self.make_stemming(token)
-                    if token not in self.index:
-                        self.index[token] = []
-                    self.index[token].append(articleId)
         
         #
         # 
-        # En la version basica solo se debe indexar el contenido "article"
+        # En la version basica solo se debe indexar el contenido "all"
         #
         #
         #
@@ -387,7 +371,8 @@ class SAR_Indexer:
     ###################################
 
 
-    def solve_query(self, query:str, prev:Dict={}): # FRAN
+
+    def solve_query(self, query:str): #David
         """
         NECESARIO PARA TODAS LAS VERSIONES
 
@@ -396,23 +381,93 @@ class SAR_Indexer:
 
 
         param:  "query": cadena con la query
-                "prev": incluido por si se quiere hacer una version recursiva. No es necesario utilizarlo.
+            "prev": incluido por si se quiere hacer una version recursiva. No es necesario utilizarlo.
 
 
         return: posting list con el resultado de la query
 
         """
-        
-        # 
-
 
         if query is None or len(query) == 0:
             return []
 
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
 
+        first_tokenization = re.findall(r'"\w+[\s\w]*"|\w+', query)
+        tokens = [token.strip('"') for token in first_tokenization]
+
+        # Pilas para operadores y operandos
+        operator_stack = []
+        operand_stack = []
+
+        # Iterar sobre los tokens
+        for i, token in tokens:
+            if token == '(':
+                operator_stack.append(token)
+            elif token == ')':
+                # Procesar los tokens hasta encontrar el '('
+                while operator_stack and operator_stack[-1] != '(':
+                    operator = operator_stack.pop()
+                    if isinstance(operand2, str):
+                        operand2 = operand_stack.pop().get_posting()
+                    if isinstance(operand1, str):
+                        operand1 = operand_stack.pop().get_posting()
+                    result = self.evaluate(operator, operand1, operand2)
+                    operand_stack.append(result)
+                # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
+                if operator_stack and operator_stack[-1] == '(':
+                    operator_stack.pop()
+            elif token in ['AND', 'OR']:
+                # Procesar los tokens con mayor prioridad
+                while operator_stack and operator_stack[-1] != '(':
+                    operator = operator_stack.pop()
+                    if isinstance(operand2, str):
+                        operand2 = operand_stack.pop().get_posting()
+                    if isinstance(operand1, str):
+                        operand1 = operand_stack.pop().get_posting()
+                    result = self.evaluate(operator, operand1, operand2)
+                    operand_stack.append(result)
+                # Añade el operador a la pila de operadores
+                operator_stack.append(token)
+            elif token == 'NOT':
+                # NOT seguido de una subexpresión
+                if tokens[i+1] == '(':  
+                    operator_stack.append('NOT')
+                else:
+                    if isinstance(operand, str):
+                        operand = operand_stack.pop().get_posting()
+                    result = self.reverse_posting(operand)
+                    operand_stack.append(result)
+            else:
+                # Añade el término a la pila de operandos
+                operand_stack.append(self.get_posting(token))
+
+        # Procesar el resto de tokens
+        while operator_stack:
+            operator = operator_stack.pop()
+            if operator == 'NOT':
+                if isinstance(operand, str):
+                    operand = operand_stack.pop()
+                result = self.reverse_posting(operand)
+                operand_stack.append(result)
+            else:
+                if isinstance(operand2, str):
+                    operand2 = operand_stack.pop().get_posting()
+                if isinstance(operand1, str):
+                    operand1 = operand_stack.pop().get_posting()
+                result = self.evaluate(operator, operand1, operand2)
+                operand_stack.append(result)
+
+        # Devolver el resultado
+        return operand_stack[-1] if operand_stack else []
+        
+
+    def evaluate(self, operator:str, operand1:List, operand2:List) -> List:
+        if operator == 'AND':
+            return self.and_posting(self.index.get(operand1, [])  , self.index.get(operand2, [])  )
+        elif operator == 'OR':
+            return self.or_posting(self.index.get(operand1, [])  , self.index.get(operand2, [])  )
+        else:
+            raise ValueError(f"Invalid operator: {operator}")
 
 
 
@@ -600,7 +655,7 @@ class SAR_Indexer:
         return p3
 
 
-    def minus_posting(self, p1, p2):
+    def minus_posting(self, p1, p2): # FRAN
         """
         OPCIONAL PARA TODAS LAS VERSIONES
 

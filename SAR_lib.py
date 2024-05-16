@@ -551,7 +551,19 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        pass
+        res = []
+        if ("*" in term or "?" in term):
+            res = self.get_permuterm(term,field)
+
+        if (self.use_stemming):
+            res = self.get_stemming(term, field)
+
+        if (term in self.index[field]):
+            res = self.index[field][term]
+
+
+
+        return res
 
 
 
@@ -585,14 +597,19 @@ class SAR_Indexer:
         return: posting list
 
         """
-        
-        stem = self.stemmer.stem(term)
 
         ####################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
         ####################################################
+        stem = self.stemmer.stem(term)
+        res = []
 
-    def get_permuterm(self, term:str, field:Optional[str]=None): # ROBERTO
+        if (stem in self.sindex[field]):
+            res = self.sindex[field][stem]
+
+        return res
+
+    def get_permuterm(self, term:str, field:Optional[str]=None): # FRAN
         """
 
         Devuelve la posting list asociada a un termino utilizando el indice permuterm.

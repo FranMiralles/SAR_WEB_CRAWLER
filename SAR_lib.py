@@ -451,7 +451,11 @@ class SAR_Indexer:
             return []
         
         tokens = []
-        elements = self.normalize_query(query)
+
+        # Normalizar la consulta
+        elements = self.normalize_query(self, query)
+
+        # Obtener las posting lists de los términos
         for element in elements:
             if element not in ['AND', 'OR', 'NOT', '(', ')']:
                 tokens.append(self.get_posting(element))
@@ -462,8 +466,9 @@ class SAR_Indexer:
         operator_stack = []
         operand_stack = []
 
+        i = 0
         # Iterar sobre los tokens
-        for i, token in tokens:
+        for token in tokens:
             if token == '(':
                 operator_stack.append(token)
             elif token == ')':
@@ -472,7 +477,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(operator, operand1, operand2)
+                    result = self.evaluate(self, operator, operand1, operand2)
                     operand_stack.append(result)
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
                 if operator_stack and operator_stack[-1] == '(':
@@ -483,7 +488,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(operator, operand1, operand2)
+                    result = self.evaluate(self, operator, operand1, operand2)
                     operand_stack.append(result)
                 # Añade el operador a la pila de operadores
                 operator_stack.append(token)
@@ -493,30 +498,31 @@ class SAR_Indexer:
                     operator_stack.append('NOT')
                 else:
                     operand = tokens.pop(i+1)
-                    result = self.reverse_posting(operand)
+                    result = self.reverse_posting(self, operand)
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(self.get_posting(token))
+                operand_stack.append(self.get_posting(self, token))
+            i += 1    
 
         # Procesar el resto de tokens
         while operator_stack:
             operator = operator_stack.pop()
             if operator == 'NOT':
                 operand = operand_stack.pop()
-                result = self.reverse_posting(operand)
+                result = self.reverse_posting(self, operand)
                 operand_stack.append(result)
             else:
                 operand2 = operand_stack.pop()
                 operand1 = operand_stack.pop()
-                result = self.evaluate(operator, operand1, operand2)
+                result = self.evaluate(self, operator, operand1, operand2)
                 operand_stack.append(result)
 
         # Devolver el resultado
         return operand_stack[-1] if operand_stack else []
         
 
-    def evaluate(self, operator:str, operand1:List, operand2:List) -> List:
+    def evaluate(self, operator:str, operand1:List, operand2:List) -> List: #David
             """
             Evalúa el operador dado en los dos operandos y devuelve el resultado.
 
@@ -532,13 +538,13 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(self.index.get(operand1, []), self.index.get(operand2, []))
+                return self.and_posting(self, operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(self.index.get(operand1, []), self.index.get(operand2, []))
+                return self.or_posting(self, operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
         
-    def normalize_query(self, query:str) -> List[str]:
+    def normalize_query(self, query:str) -> List[str]: #David
         """
         Normaliza la consulta
 
@@ -548,37 +554,43 @@ class SAR_Indexer:
         Returns:
             List[str]: lista de tokens
         """
-        element = ''
-        result = []
-        missing = False
+        current_word = ''  # Variable para almacenar la palabra actual
+        result = []  # Lista para almacenar los resultados
+        opened_quotes = False  # Flag para indicar si estamos dentro de comillas
 
         for character in query:
-            if character == '"' and not missing:
-                missing = True
-            elif character == '"' and missing:
-                missing = False
-                if element:  
-                    result.append(element)
-                element = ''
-            elif character == ' ' and missing:
-                element += character
-            elif character == ' ' and not missing:
-                if element:  
-                    result.append(element)
-                element = ''
+            if character == '"' and not opened_quotes:
+                # Si encontramos una comilla de apertura
+                opened_quotes = True
+            elif character == '"' and opened_quotes:
+                # Si encontramos una comilla de cierre
+                opened_quotes = False
+                if current_word:  # Agregar la palabra actual si no está vacía
+                    result.append(current_word)
+                current_word = ''
+            elif character == ' ' and opened_quotes:
+                # Agregar espacios dentro de comillas a la palabra actual
+                current_word += character
+            elif character == ' ' and not opened_quotes:
+                # Agregar la palabra actual si no estamos dentro de comillas
+                if current_word:  # Agregar la palabra actual si no está vacía
+                    result.append(current_word)
+                current_word = ''
             elif character == '(' or character == ')':
-                if element: 
-                    result.append(element)
+                # Si encontramos un paréntesis, agregar la palabra actual y el paréntesis
+                if current_word:  # Agregar la palabra actual si no está vacía
+                    result.append(current_word)
                 result.append(character)
-                element = ''
+                current_word = ''
             else:
-                element += character
+                # Agregar el carácter actual a la palabra actual
+                current_word += character
 
-        if element:
-            result.append(element)
+            # Agregar la última palabra 
+            if current_word:
+                result.append(current_word)
 
-        return result
-
+            return result
 
 
 

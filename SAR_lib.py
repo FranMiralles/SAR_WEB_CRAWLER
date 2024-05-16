@@ -263,29 +263,44 @@ class SAR_Indexer:
 
                 # Indexar los tokens
                 if self.positional:
-                    for i, token in enumerate(tokens):
-                        if token not in self.index['all']:
-                            self.index['all'][token] = set()
-                        self.index['all'][token].add((articleId, i))
+                        
+                    if self.multifield:
+                        for field, tokenize in self.fields:
+                                if field not in self.index:
+                                    self.index[field] = {}
+                                    
+                                content = j[field]
+                                tokens = self.tokenize(content)
+
+                                for i, token in tokens:
+                                    if token not in self.index[field]:
+                                        self.index[field][token] = set()
+                                    self.index[field][token].add((articleId, i))
+                     
+                    else:   
+                        for i, token in enumerate(tokens):
+                            if token not in self.index['all']:
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add((articleId, i))
                 else:
-                    for token in tokens:
-                        if token not in self.index['all']:
-                            self.index['all'][token] = set()
-                        self.index['all'][token].add(articleId)
+                    if self.multifield:
+                        for field, tokenize in self.fields:
+                                if field not in self.index:
+                                    self.index[field] = {}
+                                    
+                                content = j[field] 
+                                tokens = self.tokenize(content)
 
+                                for token in tokens:
+                                    if token not in self.index[field]:
+                                        self.index[field][token] = set()
+                                    self.index[field][token].add(articleId)
 
-                if self.multifield:
-                    for field, tokenize in self.fields:
-                            if field not in self.index:
-                                self.index[field] = {}
-                                
-                            content = j[field] #Estamos reindexando all
-                            tokens = self.tokenize(content)
-
-                            for token in tokens:
-                                if token not in self.index[field]:
-                                    self.index[field][token] = set()
-                                self.index[field][token].add(articleId)
+                    else:
+                        for token in tokens:
+                            if token not in self.index['all']:
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
 
@@ -385,7 +400,6 @@ class SAR_Indexer:
         print("TOKENS:")
         if self.multifield:
             for field, tokenize in self.fields:
-                if tokenize:
                     tokens = len(self.index[field])
                     print(f"\t# of tokens in '{field}': {tokens}")
         else:

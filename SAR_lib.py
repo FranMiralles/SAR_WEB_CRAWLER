@@ -157,7 +157,7 @@ class SAR_Indexer:
         return article['url'] in self.urls
 
 
-    def index_dir(self, root:str, **args): # DAVID
+    def index_dir(self, root:str, **args): # alguien
         """
         
         Recorre recursivamente el directorio o fichero "root" 
@@ -439,7 +439,7 @@ class SAR_Indexer:
                 if tokens[i+1] == '(':  
                     operator_stack.append('NOT')
                 else:
-                    operand = operand_stack.pop()
+                    operand = tokens.pop(i+1)
                     result = self.reverse_posting(operand)
                     operand_stack.append(result)
             else:
@@ -454,8 +454,8 @@ class SAR_Indexer:
                 result = self.reverse_posting(operand)
                 operand_stack.append(result)
             else:
-                operand2 = operand_stack.pop().get_posting()
-                operand1 = operand_stack.pop().get_posting()
+                operand2 = operand_stack.pop()
+                operand1 = operand_stack.pop()
                 result = self.evaluate(operator, operand1, operand2)
                 operand_stack.append(result)
 

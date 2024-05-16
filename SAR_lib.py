@@ -674,7 +674,7 @@ class SAR_Indexer:
 
         return res
 
-    def get_permuterm(self, term:str, field:Optional[str]=None): # FRAN
+    def get_permuterm(self, term:str, field:Optional[str]=None): # ROBERTO
         """
 
         Devuelve la posting list asociada a un termino utilizando el indice permuterm.

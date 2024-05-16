@@ -191,6 +191,12 @@ class SAR_Indexer:
         ##########################################
         ## COMPLETAR PARA FUNCIONALIDADES EXTRA ##
         ##########################################
+
+        #
+        #if self.stemming:
+        #    make_stemming(self)
+        #if self.permuterm:
+        #    make_permuterm(self)
         
         
     def parse_article(self, raw_line:str) -> Dict[str, str]:
@@ -390,10 +396,14 @@ class SAR_Indexer:
 
         if query is None or len(query) == 0:
             return []
-
-
-        first_tokenization = re.findall(r'"\w+[\s\w]*"|\w+', query)
-        tokens = [token.strip('"') for token in first_tokenization]
+        
+        tokens = []
+        elements = self.normalize_query(query)
+        for element in elements:
+            if element not in ['AND', 'OR', 'NOT', '(', ')']:
+                tokens.append(self.get_posting(element))
+            else:
+                tokens.append(element)
 
         # Pilas para operadores y operandos
         operator_stack = []
@@ -407,10 +417,8 @@ class SAR_Indexer:
                 # Procesar los tokens hasta encontrar el '('
                 while operator_stack and operator_stack[-1] != '(':
                     operator = operator_stack.pop()
-                    if isinstance(operand2, str):
-                        operand2 = operand_stack.pop().get_posting()
-                    if isinstance(operand1, str):
-                        operand1 = operand_stack.pop().get_posting()
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
                     result = self.evaluate(operator, operand1, operand2)
                     operand_stack.append(result)
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
@@ -420,10 +428,8 @@ class SAR_Indexer:
                 # Procesar los tokens con mayor prioridad
                 while operator_stack and operator_stack[-1] != '(':
                     operator = operator_stack.pop()
-                    if isinstance(operand2, str):
-                        operand2 = operand_stack.pop().get_posting()
-                    if isinstance(operand1, str):
-                        operand1 = operand_stack.pop().get_posting()
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
                     result = self.evaluate(operator, operand1, operand2)
                     operand_stack.append(result)
                 # Añade el operador a la pila de operadores
@@ -433,8 +439,7 @@ class SAR_Indexer:
                 if tokens[i+1] == '(':  
                     operator_stack.append('NOT')
                 else:
-                    if isinstance(operand, str):
-                        operand = operand_stack.pop().get_posting()
+                    operand = operand_stack.pop()
                     result = self.reverse_posting(operand)
                     operand_stack.append(result)
             else:
@@ -445,15 +450,12 @@ class SAR_Indexer:
         while operator_stack:
             operator = operator_stack.pop()
             if operator == 'NOT':
-                if isinstance(operand, str):
-                    operand = operand_stack.pop()
+                operand = operand_stack.pop()
                 result = self.reverse_posting(operand)
                 operand_stack.append(result)
             else:
-                if isinstance(operand2, str):
-                    operand2 = operand_stack.pop().get_posting()
-                if isinstance(operand1, str):
-                    operand1 = operand_stack.pop().get_posting()
+                operand2 = operand_stack.pop().get_posting()
+                operand1 = operand_stack.pop().get_posting()
                 result = self.evaluate(operator, operand1, operand2)
                 operand_stack.append(result)
 
@@ -462,12 +464,69 @@ class SAR_Indexer:
         
 
     def evaluate(self, operator:str, operand1:List, operand2:List) -> List:
-        if operator == 'AND':
-            return self.and_posting(self.index.get(operand1, [])  , self.index.get(operand2, [])  )
-        elif operator == 'OR':
-            return self.or_posting(self.index.get(operand1, [])  , self.index.get(operand2, [])  )
-        else:
-            raise ValueError(f"Invalid operator: {operator}")
+            """
+            Evalúa el operador dado en los dos operandos y devuelve el resultado.
+
+            Parámetros:
+            operator (str): El operador a aplicar. Los valores válidos son 'AND' y 'OR'.
+            operand1 (List): El primer operando.
+            operand2 (List): El segundo operando.
+
+            Devuelve:
+            List: El resultado de aplicar el operador en los operandos.
+
+            Lanza:
+            ValueError: Si el operador no es 'AND' ni 'OR'.
+            """
+            if operator == 'AND':
+                return self.and_posting(self.index.get(operand1, []), self.index.get(operand2, []))
+            elif operator == 'OR':
+                return self.or_posting(self.index.get(operand1, []), self.index.get(operand2, []))
+            else:
+                raise ValueError(f"Operador inválido: {operator}")
+        
+    def normalize_query(self, query:str) -> List[str]:
+        """
+        Normaliza la consulta
+
+        Args:
+            query (str): consulta
+
+        Returns:
+            List[str]: lista de tokens
+        """
+        element = ''
+        result = []
+        missing = False
+
+        for character in query:
+            if character == '"' and not missing:
+                missing = True
+            elif character == '"' and missing:
+                missing = False
+                if element:  
+                    result.append(element)
+                element = ''
+            elif character == ' ' and missing:
+                element += character
+            elif character == ' ' and not missing:
+                if element:  
+                    result.append(element)
+                element = ''
+            elif character == '(' or character == ')':
+                if element: 
+                    result.append(element)
+                result.append(character)
+                element = ''
+            else:
+                element += character
+
+        if element:
+            result.append(element)
+
+        return result
+
+
 
 
 

@@ -225,9 +225,8 @@ class SAR_Indexer:
         return article
                 
     
-    def index_file(self, filename:str): #CARLOS
+    def index_file(self, filename: str):
         """
-
         Indexa el contenido de un fichero.
         
         input: "filename" es el nombre de un fichero generado por el Crawler cada línea es un objeto json
@@ -238,37 +237,78 @@ class SAR_Indexer:
         dependiendo del valor de self.multifield y self.positional se debe ampliar el indexado,
         en el caso de positional se debe indexar la posición de las palabras, en el caso de multifield
         se deben indexar todos los campos.
-
         """
 
-        #ASIGN UNIQUE DOC IDS
-        docId = len(self.docs)  # ID único para el documento
+        # Asignar ID único para el documento
+        docId = len(self.docs)
         self.docs[docId] = filename
+        if 'all' not in self.index:
+            self.index['all'] = {}
 
-        for i, line in enumerate(open(filename)):
-            j = self.parse_article(line)  # Parsear el artículo, nos devuelve un diccionario con las siguientes claves: 'url', 'title', 'summary', 'all', 'section-name'
-            if self.already_in_index(line):  # Verificar si el artículo ya está indexado
-                continue  # Si está indexado, pasar al siguiente artículo
+        with open(filename, 'r', encoding='utf-8') as file:
+            for line in file:
+                j = self.parse_article(line)  # Parsear el artículo
+                if self.already_in_index(j):  # Verificar si el artículo ya está indexado
+                    continue
 
-            #TOKENIZE
-            content = j['all']  # Obtener el contenido del artículo
-            tokens = self.tokenize(content)  # Tokenizar el contenido eliminando simbolos no alfanumericos y dividientola por espacios.
+                # Tokenizar el contenido del artículo
+                content = j['all']
+                tokens = self.tokenize(content)
 
-            #ASIIGN UNIQUE ARTICLE IDS
-            articleId = len(self.articles)
-            self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
-            
-            #INDEXAR
-            for token in tokens:
-                if token not in self.index:
-                    self.index[token] = set()
-                self.index[token].add(articleId) 
+                #print(f"Indexing {j['title']} with {len(tokens)} tokens")
 
-        
-        #
-        # 
-        # En la version basica solo se debe indexar el contenido "all"
-        #
+                # Asignar ID único para el artículo
+                articleId = len(self.articles)
+                self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+
+                # Indexar los tokens
+                if self.positional:
+                        
+                    if self.multifield:
+                        for field, tokenize in self.fields:
+                                if field not in self.index:
+                                    self.index[field] = {}
+                                    
+                                content = j[field]
+                                tokens = self.tokenize(content)
+
+                                for i, token in tokens:
+                                    if token not in self.index[field]:
+                                        self.index[field][token] = set()
+                                    self.index[field][token].add((articleId, i))
+                     
+                    else:   
+                        for i, token in enumerate(tokens):
+                            if token not in self.index['all']:
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add((articleId, i))
+                else:
+                    if self.multifield:
+                        for field, tokenize in self.fields:
+                                if field not in self.index:
+                                    self.index[field] = {}
+                                    
+                                content = j[field] 
+                                tokens = self.tokenize(content)
+
+                                for token in tokens:
+                                    if token not in self.index[field]:
+                                        self.index[field][token] = set()
+                                    self.index[field][token].add(articleId)
+
+                    else:
+                        for token in tokens:
+                            if token not in self.index['all']:
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add(articleId)
+
+                self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
+
+        print(f"Indexed {filename} with {len(self.articles)} articles and {sum(len(postings) for postings in self.index['all'].values())} total tokens.")
+
+            # 
+            # En la version basica solo se debe indexar el contenido "all"
+            #
         #
         #
         #################
@@ -352,15 +392,28 @@ class SAR_Indexer:
         """
         Muestra estadisticas de los indices.
         """
-        print("Number of URLs indexed:", len(self.urls))
-        print("Number of documents indexed:", len(self.docs))
-        print("Number of unique terms:", len(self.index))
-        print("Number of stemmed terms:", len(self.sindex))
-        print("Number of permuterm terms:", len(self.ptindex))
-        print("Number of articles indexed:", len(self.articles))
-        print("Indexing fields:", [field[0] for field in self.fields])
+        print("========================================")
+        print(f"Number of indexed files: {len(self.docs)}")
+        print("----------------------------------------")
+        print(f"Number of indexed articles: {len(self.articles)}")
+        print("----------------------------------------")
+        print("TOKENS:")
+        if self.multifield:
+            for field, tokenize in self.fields:
+                    tokens = len(self.index[field])
+                    print(f"\t# of tokens in '{field}': {tokens}")
+        else:
+            tokens = len(self.index['all'])
+            print(f"\t# of tokens in 'all': {tokens}")
+        print("----------------------------------------")
+        print("Positional queries are NOT allowed.")
+        print("========================================")
 
         
+        #Let's print the inverted index
+        #print("Inverted index:")
+        #for term, posting in self.index['all'].items():
+            #print(f"{term}: {posting}")
 
 
 

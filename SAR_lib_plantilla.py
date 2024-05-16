@@ -512,11 +512,12 @@ class SAR_Indexer:
         return: posting list con todos los artid exceptos los contenidos en p
 
         """
-        
-        pass
+        # COMPLETADO
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
+        res = list(self.docs.keys())
+        return self.minus_posting(res, p)
 
 
 
@@ -532,7 +533,6 @@ class SAR_Indexer:
         return: posting list con los artid incluidos en p1 y p2
 
         """
-        
         # COMPLETADO
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -613,9 +613,7 @@ class SAR_Indexer:
         return: posting list con los artid incluidos de p1 y no en p2
 
         """
-
-        
-        
+        # COMPLETADO
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################

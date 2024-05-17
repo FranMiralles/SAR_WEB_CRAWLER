@@ -308,16 +308,6 @@ class SAR_Indexer:
 
         print(f"Indexed {filename} with {len(self.articles)} articles and {sum(len(postings) for postings in self.index['all'].values())} total tokens.")
 
-            # 
-            # En la version basica solo se debe indexar el contenido "all"
-            #
-        #
-        #
-        #################
-        ### COMPLETAR ###
-        #################
-
-
 
     def set_stemming(self, v:bool):
         """

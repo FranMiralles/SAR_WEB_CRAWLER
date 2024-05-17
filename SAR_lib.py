@@ -666,9 +666,11 @@ class SAR_Indexer:
         ####################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
         ####################################################
+
+        # Devuelve el steam del término
         stem = self.stemmer.stem(term)
         res = []
-
+        # Si se encuentra en el índice, devolver la posting list asociada
         if (stem in self.sindex[field]):
             res = self.sindex[field][stem]
 

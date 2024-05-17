@@ -162,45 +162,37 @@ class SAR_Wiki_Crawler:
         title = match.group('title')
         summary = match.group('summary')
         rest_tot = match.group('rest')
-
         document['url'] = url
         document['title'] = title
         document['summary'] = summary
-
         sections = []
-
         # Iterable para buscar secciones
-        sections = self.sections_re.finditer(rest_tot)
+        sections_iter = self.sections_re.finditer(rest_tot)
         # Buscar secciones en el contenido restante
-        for _ in sections:
+        for _ in sections_iter:
             sections_match = self.section_re.search(rest_tot)
             if sections_match:
                 section_name = sections_match.group('name')
                 section_text = sections_match.group('text')
                 rest_sec = sections_match.group('rest')
-
                 section_dict = {
                     'name': section_name,
                     'text': section_text,
                     'subsections': []
                 }
-
+                # Buscar subsecciones en el contenido restante de la sección
                 subsections = self.subsections_re.finditer(rest_sec)
                 for _ in subsections:
                     subsection_match = self.subsection_re.search(rest_sec)
                     if subsection_match:
                         subsection_name = subsection_match.group('name')
                         subsection_text = subsection_match.group('text')
-
                         subsection_dict = {
                             'name': subsection_name,
                             'text': subsection_text
                         }
-
                         section_dict['subsections'].append(subsection_dict)
-
                 sections.append(section_dict)
-                
         return document
 
 

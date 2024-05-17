@@ -548,7 +548,7 @@ class SAR_Indexer:
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(self.get_posting(token))
+                operand_stack.append(token)
             i += 1    
 
         # Procesar el resto de tokens
@@ -586,9 +586,9 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(self, operand1, operand2)
+                return self.and_posting(operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(self, operand1, operand2)
+                return self.or_posting(operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
         
@@ -695,9 +695,6 @@ class SAR_Indexer:
         if (field == None):
             field = "all"
 
-
-
-        
         # Caso de usar permuterm
         if ("*" in term or "?" in term):
             res = self.get_permuterm(term,field)

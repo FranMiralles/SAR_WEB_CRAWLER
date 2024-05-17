@@ -617,15 +617,25 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         res = []
+
+        # En caso de que el campo sea None, buscar en all
+        if (field == None):
+            field = "all"
+        
+        # Caso de usar permuterm
         if ("*" in term or "?" in term):
             res = self.get_permuterm(term,field)
 
+        # Caso de usar positionals
+        if (" " in term):
+            res = self.get_positionals(term, field)
+
+        # Caso de usar stemming
         if (self.use_stemming):
             res = self.get_stemming(term, field)
 
         if (term in self.index[field]):
             res = self.index[field][term]
-
 
 
         return res
@@ -644,6 +654,10 @@ class SAR_Indexer:
         return: posting list
 
         """
+        separedTerms = terms.split(" ")
+        print(separedTerms)
+
+
         pass
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
@@ -843,6 +857,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p1.sort()
+        # En sets para eliminar duplicados
         p1 = list(set(p1))
         p2.sort()
         p2 = list(set(p2))

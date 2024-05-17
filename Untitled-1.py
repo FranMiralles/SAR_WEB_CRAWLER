@@ -22,7 +22,7 @@ def normalize_query(query: str) -> list[str]:
             opened_quotes = False
             if current_word:  # Add the current word if it's not empty
                 result.append(current_word)
-            current_word = ''
+                current_word = ''
         elif character == ' ' and opened_quotes:
             # Add spaces inside quotes to the current word
             current_word += character
@@ -37,6 +37,9 @@ def normalize_query(query: str) -> list[str]:
                 result.append(current_word)
                 current_word = ''
             result.append(character)
+            # Insert 'AND' before '(' if the previous element is not an operator
+            if character == '(' and result[-2] not in operators:
+                result.append('AND')
         else:
             # Add the current character to the current word
             current_word += character
@@ -45,42 +48,10 @@ def normalize_query(query: str) -> list[str]:
     if current_word:
         result.append(current_word)
     
-    # Insert 'AND' where necessary
-    final_result = []
-    for i in range(len(result)):
-        final_result.append(result[i])
-        if (
-            i < len(result) - 1 and
-            result[i] not in operators and 
-            result[i + 1] not in operators and 
-            result[i + 1] != '('
-        ):
-            final_result.append('AND')
-        if (
-            i < len(result) - 1 and 
-            result[i] == ')' and 
-            result[i + 1] not in operators and 
-            result[i + 1] != ')'
-        ):
-            final_result.append('AND')
-        if (
-            i < len(result) - 1 and 
-            result[i] not in operators and 
-            result[i + 1] == '('
-        ):
-            final_result.append('AND')
-    res = []   
-    for element in final_result:
-            if element not in ['AND', 'OR', 'NOT', '(', ')']:
-                if ':' in element:
-                    field, term = element.split(':')
-                    res.append(term)
-                    res.append(field)
     
-    return res
 
 # Example usage
-query = 'hello world:bueno url:"find de semana" (this is AND NOT a test OR example) apc'
+query = 'hello world (this is AND NOT a test OR example) apc'
 normalized_query = normalize_query(query)
 print(normalized_query)
 # Output should be: ['hello', 'AND', 'world', 'AND', '(', 'this', 'AND', 'is', 'AND', 'NOT', 'a', 'AND', 'test', 'OR', 'example', ')', 'AND', 'apc']

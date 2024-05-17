@@ -508,7 +508,11 @@ class SAR_Indexer:
         # Obtener las posting lists de los términos
         for element in elements:
             if element not in ['AND', 'OR', 'NOT', '(', ')']:
-                tokens.append(self.get_posting(element))
+                if ':' in element:
+                    field, term = element.split(':')
+                    tokens.append(self.get_posting(self, term, field))
+                else:
+                    tokens.append(self.get_posting(self, element))
             else:
                 tokens.append(element)
 
@@ -606,7 +610,8 @@ class SAR_Indexer:
         """
         current_word = ''  # Variable para almacenar la palabra actual
         result = []  # Lista para almacenar los resultados
-        opened_quotes = False  # Flag para indicar si estamos dentro de comillas
+        opened_quotes = False  # Bandera para indicar si estamos dentro de comillas
+        operators = {"OR", "AND", "NOT", "(", ")"}  # Conjunto de operadores lógicos y paréntesis
 
         for character in query:
             if character == '"' and not opened_quotes:
@@ -617,7 +622,7 @@ class SAR_Indexer:
                 opened_quotes = False
                 if current_word:  # Agregar la palabra actual si no está vacía
                     result.append(current_word)
-                current_word = ''
+                    current_word = ''
             elif character == ' ' and opened_quotes:
                 # Agregar espacios dentro de comillas a la palabra actual
                 current_word += character
@@ -625,23 +630,47 @@ class SAR_Indexer:
                 # Agregar la palabra actual si no estamos dentro de comillas
                 if current_word:  # Agregar la palabra actual si no está vacía
                     result.append(current_word)
-                current_word = ''
+                    current_word = ''
             elif character == '(' or character == ')':
                 # Si encontramos un paréntesis, agregar la palabra actual y el paréntesis
                 if current_word:  # Agregar la palabra actual si no está vacía
                     result.append(current_word)
+                    current_word = ''
                 result.append(character)
-                current_word = ''
             else:
                 # Agregar el carácter actual a la palabra actual
                 current_word += character
-
-            # Agregar la última palabra 
-            if current_word:
-                result.append(current_word)
-
-            return result
-
+        
+        # Agregar la última palabra
+        if current_word:
+            result.append(current_word)
+        
+        # Insertar 'AND' donde sea necesario
+        final_result = []
+        for i in range(len(result)):
+            final_result.append(result[i])
+            if (
+                i < len(result) - 1 and
+                result[i] not in operators and 
+                result[i + 1] not in operators and 
+                result[i + 1] != '('
+            ):
+                final_result.append('AND')
+            if (
+                i < len(result) - 1 and 
+                result[i] == ')' and 
+                result[i + 1] not in operators and 
+                result[i + 1] != ')'
+            ):
+                final_result.append('AND')
+            if (
+                i < len(result) - 1 and 
+                result[i] not in operators and 
+                result[i + 1] == '('
+            ):
+                final_result.append('AND')
+        
+        return final_result
 
 
 

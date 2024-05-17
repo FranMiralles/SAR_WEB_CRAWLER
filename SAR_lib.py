@@ -698,14 +698,19 @@ class SAR_Indexer:
             res = self.get_permuterm(term,field)
 
         # Caso de usar positionals
-        if (" " in term or ":" in term):
+        elif (" " in term or ":" in term):
             res = self.get_positionals(term, field)
 
         # Caso de usar stemming
-        if (self.use_stemming):
+        elif (self.use_stemming):
             res = self.get_stemming(term, field)
 
-        if (term in self.index[field]):
+        # Si se han usado positionals, el articleId estará en la posición 0
+        elif(self.positional):
+            # Si hay posicionales y no es posicional
+            if (term in self.index[field]):
+                res = self.index[field][term][0]
+        else:
             res = self.index[field][term]
 
 
@@ -713,7 +718,7 @@ class SAR_Indexer:
 
 
 
-    def get_positionals(self, terms:str, index): # FRAN
+    def get_positionals(self, terms:str, field:Optional[str]=None): # FRAN
         """
 
         Devuelve la posting list asociada a una secuencia de terminos consecutivos.
@@ -725,11 +730,22 @@ class SAR_Indexer:
         return: posting list
 
         """
+        res = []
         separedTerms = terms.split(" ")
         print(separedTerms)
+        dicSeparedTerms = {}
+        for separedTerm in separedTerms:
+            dicSeparedTerms[separedTerm] = self.get_positionals(separedTerm)
+            
+        print(self.index[field][separedTerms[0]])
+        
+
+        # Sacarlos de index
+        
 
 
-        pass
+
+        return res
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
         ########################################################

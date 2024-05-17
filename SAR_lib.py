@@ -566,9 +566,7 @@ class SAR_Indexer:
 
         # Devolver el resultado
         return operand_stack[-1] if operand_stack else []
-    
-
-        
+         
 
     def evaluate(self, operator:str, operand1:List, operand2:List) -> List: #David
             """
@@ -663,7 +661,7 @@ class SAR_Indexer:
                 result[i + 1] == '('
             ):
                 final_result.append('AND')
-        
+
         return final_result
 
 
@@ -828,7 +826,7 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.docs.keys())
+        res = list(self.articles.keys())
         return self.minus_posting(res, p)
 
 
@@ -948,6 +946,8 @@ class SAR_Indexer:
         while len(p1) != 0:
             p3.append(p1[0])
             p1.pop(0)
+        
+        print(len(p3))
 
         return p3
 

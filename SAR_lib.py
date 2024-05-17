@@ -24,7 +24,7 @@ class SAR_Indexer:
     # lista de campos, el booleano indica si se debe tokenizar el campo
     # NECESARIO PARA LA AMPLIACION MULTIFIELD
     fields = [
-        ("all", True), ("title", True), ("summary", True), ("section-name", True), ('url', False),
+        ("all", True), ("title", True), ("summary", True), ("section-name", True), ('url', True),
     ]
     def_field = 'all'
     PAR_MARK = '%'
@@ -193,10 +193,10 @@ class SAR_Indexer:
         ##########################################
 
         #
-        #if self.stemming:
-        #    make_stemming(self)
-        #if self.permuterm:
-        #    make_permuterm(self)
+        if self.stemming:
+            self.make_stemming()
+        if self.permuterm:
+            self.make_permuterm()
         
         
     def parse_article(self, raw_line:str) -> Dict[str, str]:
@@ -225,7 +225,7 @@ class SAR_Indexer:
         return article
                 
     
-    def index_file(self, filename: str):
+    def index_file(self, filename: str): # CARLOS
         """
         Indexa el contenido de un fichero.
         
@@ -266,16 +266,17 @@ class SAR_Indexer:
                         
                     if self.multifield:
                         for field, tokenize in self.fields:
-                                if field not in self.index:
-                                    self.index[field] = {}
-                                    
-                                content = j[field]
-                                tokens = self.tokenize(content)
+                                if tokenize:
+                                    if field not in self.index:
+                                        self.index[field] = {}
+                                        
+                                    content = j[field]
+                                    tokens = self.tokenize(content)
 
-                                for i, token in tokens:
-                                    if token not in self.index[field]:
-                                        self.index[field][token] = set()
-                                    self.index[field][token].add((articleId, i))
+                                    for i, token in enumerate(tokens):
+                                        if token not in self.index[field]:
+                                            self.index[field][token] = set()
+                                        self.index[field][token].add((articleId, i))
                      
                     else:   
                         for i, token in enumerate(tokens):
@@ -285,16 +286,17 @@ class SAR_Indexer:
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
-                                if field not in self.index:
-                                    self.index[field] = {}
-                                    
-                                content = j[field] 
-                                tokens = self.tokenize(content)
+                                if tokenize:
+                                    if field not in self.index:
+                                        self.index[field] = {}
+                                        
+                                    content = j[field] 
+                                    tokens = self.tokenize(content)
 
-                                for token in tokens:
-                                    if token not in self.index[field]:
-                                        self.index[field][token] = set()
-                                    self.index[field][token].add(articleId)
+                                    for token in tokens:
+                                        if token not in self.index[field]:
+                                            self.index[field][token] = set()
+                                        self.index[field][token].add(articleId)
 
                     else:
                         for token in tokens:
@@ -358,14 +360,26 @@ class SAR_Indexer:
 
 
         """
-        
         self.sindex = {}
-        for term in self.index:
-            stemmed_term = self.stemmer.stem(term)
-            if stemmed_term not in self.sindex:
-                self.sindex[stemmed_term] = set()
-            self.sindex[stemmed_term].update(self.index[term])
 
+        #For multifield
+        if self.multifield:
+            for field, tokenize in self.fields: #Iterar por 'all', 'title', 'summary', 'section-name', 'url'
+                if tokenize: #Si el campo se tokeniza
+                    if field not in self.sindex: #Crear la entrada en el diccionario si no existe
+                        self.sindex[field] = {}
+                    for term in self.index[field]: #Para cada termino en el indice actual
+                        stem = self.stemmer.stem(term) #Sacamos el stem del termino
+                        if stem not in self.sindex[field]: #Si el stem no esta en el indice de stems, lo añadimos
+                            self.sindex[field][stem] = []
+                        self.sindex[field][stem].append(term)
+        else: 
+            self.sindex['all'] = {}
+            for term in self.index['all']: #Para cada termino en el indice actual
+                stem = self.stemmer.stem(term)
+                if stem not in self.sindex['all']: #Si el stem no esta en el indice de stems, lo añadimos
+                    self.sindex['all'][stem] = []
+                self.sindex['all'][stem].append(term)
 
     
     def make_permuterm(self): #CARLOS
@@ -376,16 +390,41 @@ class SAR_Indexer:
         """
 
         self.ptindex = {}
-        for term in self.index:
-            # Generate all possible rotations of the term
-            rotations = [term[i:] + term[:i] for i in range(len(term))]
-            # Add the rotations to the permuterm index
-            for rotation in rotations:
-                if rotation not in self.ptindex:
-                    self.ptindex[rotation] = set()
-                self.ptindex[rotation].add(term)
 
+        # For multifield
+        if self.multifield:
+            for field, tokenize in self.fields:
+                if tokenize:
+                    if field not in self.ptindex:
+                        self.ptindex[field] = {}
+                    for term in self.index[field]:
+                        permuted_terms = self.generate_permuterms(term)
+                        for perm in permuted_terms:
+                            self.ptindex[field][perm] = term
+        else:
+            if 'all' not in self.ptindex:
+                self.ptindex['all'] = {}
+            for term in self.index['all']:
+                permuted_terms = self.generate_permuterms(term)
+                for perm in permuted_terms:
+                    self.ptindex['all'][perm] = term
 
+    def generate_permuterms(self, term): #Carlos, método auxiliar
+        """
+        Genera la lista de permuterms para un término dado.
+
+        Args:
+            term (str): El término para el que se generarán los permuterms.
+
+        Returns:
+            List[str]: Lista de permuterms generados para el término.
+        """
+        permuterms = []
+        augmented_term = term + '$'
+        for i in range(len(augmented_term)):
+            permuterm = augmented_term[i:] + augmented_term[:i]
+            permuterms.append(permuterm)
+        return permuterms
 
 
     def show_stats(self): #CARLOS
@@ -399,22 +438,33 @@ class SAR_Indexer:
         print("----------------------------------------")
         print("TOKENS:")
         if self.multifield:
-            for field, tokenize in self.fields:
-                    tokens = len(self.index[field])
-                    print(f"\t# of tokens in '{field}': {tokens}")
+            for field in self.index:
+                tokens = len(self.index[field])
+                print(f"\t# of tokens in '{field}': {tokens}")
         else:
             tokens = len(self.index['all'])
             print(f"\t# of tokens in 'all': {tokens}")
         print("----------------------------------------")
-        print("Positional queries are NOT allowed.")
-        print("========================================")
-
+        if self.permuterm:
+            print("PERMUTERMS:")
+            for field in self.ptindex:
+                tokens = len(self.ptindex[field])
+                print(f"\t# of permuterms in '{field}': {tokens}")
+            print("----------------------------------------")
         
-        #Let's print the inverted index
-        #print("Inverted index:")
-        #for term, posting in self.index['all'].items():
-            #print(f"{term}: {posting}")
+        if self.stemming:
+            print("STEMS:")
+            for field in self.sindex:
+                tokens = len(self.sindex[field])
+                print(f"\t# of stems in '{field}': {tokens}")
+            print("----------------------------------------")
 
+        if(self.positional):
+            print("Positional queries are allowed")
+        else:
+            print("Positional queries are NOT allowed")
+
+        print("========================================")
 
 
     #################################

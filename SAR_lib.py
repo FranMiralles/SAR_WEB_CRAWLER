@@ -275,14 +275,14 @@ class SAR_Indexer:
 
                                     for i, token in enumerate(tokens):
                                         if token not in self.index[field]:
-                                            self.index[field][token] = set()
-                                        self.index[field][token].add((articleId, i))
+                                            self.index[field][token] = list()
+                                        self.index[field][token].append((articleId, i))
                      
                     else:   
                         for i, token in enumerate(tokens):
                             if token not in self.index['all']:
-                                self.index['all'][token] = set()
-                            self.index['all'][token].add((articleId, i))
+                                self.index['all'][token] = list()
+                            self.index['all'][token].append((articleId, i))
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
@@ -295,28 +295,18 @@ class SAR_Indexer:
 
                                     for token in tokens:
                                         if token not in self.index[field]:
-                                            self.index[field][token] = set()
-                                        self.index[field][token].add(articleId)
+                                            self.index[field][token] = list()
+                                        self.index[field][token].append(articleId)
 
                     else:
                         for token in tokens:
                             if token not in self.index['all']:
-                                self.index['all'][token] = set()
-                            self.index['all'][token].add(articleId)
+                                self.index['all'][token] = list()
+                            self.index['all'][token].append(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
 
         print(f"Indexed {filename} with {len(self.articles)} articles and {sum(len(postings) for postings in self.index['all'].values())} total tokens.")
-
-            # 
-            # En la version basica solo se debe indexar el contenido "all"
-            #
-        #
-        #
-        #################
-        ### COMPLETAR ###
-        #################
-
 
 
     def set_stemming(self, v:bool):
@@ -503,14 +493,20 @@ class SAR_Indexer:
         tokens = []
 
         # Normalizar la consulta
-        elements = self.normalize_query(self, query)
+        elements = self.normalize_query(query)
 
         # Obtener las posting lists de los términos
         for element in elements:
             if element not in ['AND', 'OR', 'NOT', '(', ')']:
-                tokens.append(self.get_posting(element))
+                if ':' in element:
+                    field, term = element.split(':')
+                    tokens.append(self.get_posting(term, field))
+                else:
+                    tokens.append(self.get_posting(element))
+                
             else:
                 tokens.append(element)
+
 
         # Pilas para operadores y operandos
         operator_stack = []
@@ -527,7 +523,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(self, operator, operand1, operand2)
+                    result = self.evaluate(operator, operand1, operand2)
                     operand_stack.append(result)
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
                 if operator_stack and operator_stack[-1] == '(':
@@ -538,7 +534,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(self, operator, operand1, operand2)
+                    result = self.evaluate(operator, operand1, operand2)
                     operand_stack.append(result)
                 # Añade el operador a la pila de operadores
                 operator_stack.append(token)
@@ -548,11 +544,11 @@ class SAR_Indexer:
                     operator_stack.append('NOT')
                 else:
                     operand = tokens.pop(i+1)
-                    result = self.reverse_posting(self, operand)
+                    result = self.reverse_posting(operand)
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(self.get_posting(self, token))
+                operand_stack.append(token)
             i += 1    
 
         # Procesar el resto de tokens
@@ -560,17 +556,17 @@ class SAR_Indexer:
             operator = operator_stack.pop()
             if operator == 'NOT':
                 operand = operand_stack.pop()
-                result = self.reverse_posting(self, operand)
+                result = self.reverse_posting(operand)
                 operand_stack.append(result)
             else:
                 operand2 = operand_stack.pop()
                 operand1 = operand_stack.pop()
-                result = self.evaluate(self, operator, operand1, operand2)
+                result = self.evaluate(operator, operand1, operand2)
                 operand_stack.append(result)
 
         # Devolver el resultado
         return operand_stack[-1] if operand_stack else []
-        
+         
 
     def evaluate(self, operator:str, operand1:List, operand2:List) -> List: #David
             """
@@ -588,9 +584,9 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(self, operand1, operand2)
+                return self.and_posting(operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(self, operand1, operand2)
+                return self.or_posting(operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
         
@@ -606,7 +602,8 @@ class SAR_Indexer:
         """
         current_word = ''  # Variable para almacenar la palabra actual
         result = []  # Lista para almacenar los resultados
-        opened_quotes = False  # Flag para indicar si estamos dentro de comillas
+        opened_quotes = False  # Bandera para indicar si estamos dentro de comillas
+        operators = {"OR", "AND", "NOT", "(", ")"}  # Conjunto de operadores lógicos y paréntesis
 
         for character in query:
             if character == '"' and not opened_quotes:
@@ -617,7 +614,7 @@ class SAR_Indexer:
                 opened_quotes = False
                 if current_word:  # Agregar la palabra actual si no está vacía
                     result.append(current_word)
-                current_word = ''
+                    current_word = ''
             elif character == ' ' and opened_quotes:
                 # Agregar espacios dentro de comillas a la palabra actual
                 current_word += character
@@ -625,23 +622,47 @@ class SAR_Indexer:
                 # Agregar la palabra actual si no estamos dentro de comillas
                 if current_word:  # Agregar la palabra actual si no está vacía
                     result.append(current_word)
-                current_word = ''
+                    current_word = ''
             elif character == '(' or character == ')':
                 # Si encontramos un paréntesis, agregar la palabra actual y el paréntesis
                 if current_word:  # Agregar la palabra actual si no está vacía
                     result.append(current_word)
+                    current_word = ''
                 result.append(character)
-                current_word = ''
             else:
                 # Agregar el carácter actual a la palabra actual
                 current_word += character
+        
+        # Agregar la última palabra
+        if current_word:
+            result.append(current_word)
+        
+        # Insertar 'AND' donde sea necesario
+        final_result = []
+        for i in range(len(result)):
+            final_result.append(result[i])
+            if (
+                i < len(result) - 1 and
+                result[i] not in operators and 
+                result[i + 1] not in operators and 
+                result[i + 1] != '('
+            ):
+                final_result.append('AND')
+            if (
+                i < len(result) - 1 and 
+                result[i] == ')' and 
+                result[i + 1] not in operators and 
+                result[i + 1] != ')'
+            ):
+                final_result.append('AND')
+            if (
+                i < len(result) - 1 and 
+                result[i] not in operators and 
+                result[i + 1] == '('
+            ):
+                final_result.append('AND')
 
-            # Agregar la última palabra 
-            if current_word:
-                result.append(current_word)
-
-            return result
-
+        return final_result
 
 
 
@@ -671,7 +692,7 @@ class SAR_Indexer:
         # En caso de que el campo sea None, buscar en all
         if (field == None):
             field = "all"
-        
+
         # Caso de usar permuterm
         if ("*" in term or "?" in term):
             res = self.get_permuterm(term,field)
@@ -805,7 +826,7 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.docs.keys())
+        res = list(self.articles.keys())
         return self.minus_posting(res, p)
 
 
@@ -918,6 +939,8 @@ class SAR_Indexer:
         while len(p1) != 0:
             p3.append(p1[0])
             p1.pop(0)
+        
+        print(len(p3))
 
         return p3
 

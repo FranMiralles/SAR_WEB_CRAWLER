@@ -170,7 +170,7 @@ class SAR_Wiki_Crawler:
         sections_iter = self.sections_re.finditer(rest_tot)
         # Buscar secciones en el contenido restante
         for _ in sections_iter:
-            sections_match = self.section_re.search(rest_tot)
+            sections_match = self.section_re.match(rest_tot)
             if sections_match:
                 section_name = sections_match.group('name')
                 section_text = sections_match.group('text')

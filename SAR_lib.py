@@ -24,7 +24,7 @@ class SAR_Indexer:
     # lista de campos, el booleano indica si se debe tokenizar el campo
     # NECESARIO PARA LA AMPLIACION MULTIFIELD
     fields = [
-        ("all", True), ("title", True), ("summary", True), ("section-name", True), ('url', True),
+        ("all", True), ("title", True), ("summary", True), ("section-name", True), ('url', False),
     ]
     def_field = 'all'
     PAR_MARK = '%'
@@ -180,7 +180,7 @@ class SAR_Indexer:
         elif file_or_dir.is_dir():
             # is a directory
             for d, _, files in os.walk(root):
-                for filename in files:
+                for filename in sorted(files):
                     if filename.endswith('.json'):
                         fullname = os.path.join(d, filename)
                         self.index_file(fullname)
@@ -253,7 +253,6 @@ class SAR_Indexer:
 
                 # Tokenizar el contenido del artículo
                 content = j['all']
-                tokens = self.tokenize(content)
 
                 #print(f"Indexing {j['title']} with {len(tokens)} tokens")
 
@@ -266,43 +265,66 @@ class SAR_Indexer:
                         
                     if self.multifield:
                         for field, tokenize in self.fields:
-                                if tokenize:
                                     if field not in self.index:
                                         self.index[field] = {}
                                         
                                     content = j[field]
-                                    tokens = self.tokenize(content)
+                                    if tokenize:
+                                        tokens = self.tokenize(content)
+                                        for i, token in enumerate(tokens):
+                                            if token not in self.index[field]:
+                                                self.index[field][token] = []
+                                            #MIRAR SI YA ESTA EN LA LISTA
+                                            self.index[field][token].append((articleId, i))
+                                    else:
+                                        url = content #Es el caso de url, se indexa como una palabra
+                                        if url not in self.index[field]:
+                                            self.index[field][url] = []
 
-                                    for i, token in enumerate(tokens):
-                                        if token not in self.index[field]:
-                                            self.index[field][token] = list()
-                                        self.index[field][token].append((articleId, i))
+                                        
+
+
+                                        self.index[field][url].append((articleId, 0))
+
+                                    
                      
                     else:   
+                        tokens = self.tokenize(content)
                         for i, token in enumerate(tokens):
                             if token not in self.index['all']:
-                                self.index['all'][token] = list()
-                            self.index['all'][token].append((articleId, i))
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add((articleId, i))
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
-                                if tokenize:
                                     if field not in self.index:
                                         self.index[field] = {}
                                         
                                     content = j[field] 
-                                    tokens = self.tokenize(content)
+                                    if tokenize:
+                                        tokens = self.tokenize(content)
+                                        for token in tokens:
+                                            if token not in self.index[field]:
+                                                self.index[field][token] = []
+                                            # MIRAR SI YA ESTA EN LA LISTA, comprobar si la última tupla es la misma que la actual
+                                            if not self.index[field][token] or self.index[field][token][-1] != articleId:
+                                                self.index[field][token].append(articleId)
+                                           
 
-                                    for token in tokens:
-                                        if token not in self.index[field]:
-                                            self.index[field][token] = list()
-                                        self.index[field][token].append(articleId)
+                                    else :
+                                        url = content
+                                        if url not in self.index[field]:
+                                            self.index[field][url] = []
+                                        self.index[field][url].append(articleId)
+
+                                    
 
                     else:
+                        tokens = self.tokenize(content)
                         for token in tokens:
                             if token not in self.index['all']:
-                                self.index['all'][token] = list()
-                            self.index['all'][token].append(articleId)
+                                self.index['all'][token] = set()
+                            self.index['all'][token].add(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
 
@@ -355,7 +377,6 @@ class SAR_Indexer:
         #For multifield
         if self.multifield:
             for field, tokenize in self.fields: #Iterar por 'all', 'title', 'summary', 'section-name', 'url'
-                if tokenize: #Si el campo se tokeniza
                     if field not in self.sindex: #Crear la entrada en el diccionario si no existe
                         self.sindex[field] = {}
                     for term in self.index[field]: #Para cada termino en el indice actual
@@ -384,7 +405,6 @@ class SAR_Indexer:
         # For multifield
         if self.multifield:
             for field, tokenize in self.fields:
-                if tokenize:
                     if field not in self.ptindex:
                         self.ptindex[field] = {}
                     for term in self.index[field]:
@@ -455,6 +475,12 @@ class SAR_Indexer:
             print("Positional queries are NOT allowed")
 
         print("========================================")
+
+
+        #Printear las posting lists
+
+        #for term in self.index['all']:
+        #    print(f"{term}: {self.index['all'][term]}")
 
 
     #################################
@@ -548,7 +574,7 @@ class SAR_Indexer:
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(token)
+                operand_stack.append(self.get_posting(token))
             i += 1    
 
         # Procesar el resto de tokens
@@ -566,7 +592,9 @@ class SAR_Indexer:
 
         # Devolver el resultado
         return operand_stack[-1] if operand_stack else []
-         
+    
+
+        
 
     def evaluate(self, operator:str, operand1:List, operand2:List) -> List: #David
             """
@@ -584,9 +612,9 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(operand1, operand2)
+                return self.and_posting(self, operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(operand1, operand2)
+                return self.or_posting(self, operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
         
@@ -661,7 +689,7 @@ class SAR_Indexer:
                 result[i + 1] == '('
             ):
                 final_result.append('AND')
-
+        
         return final_result
 
 
@@ -693,7 +721,10 @@ class SAR_Indexer:
         # En caso de que el campo sea None, buscar en all
         if field == None:
             field = "all"
- 
+
+        # Caso de usar permuterm
+        if ("*" in term or "?" in term):
+            res = self.get_permuterm(term,field)
 
         # Caso de usar positionals
         if (" " in term or ":" in term):
@@ -809,6 +840,10 @@ class SAR_Indexer:
         #### COMPLETADO #####
         #####################
 
+        ##################################################
+        ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
+        ##################################################
+
         # Verifica si el término contiene un comodín
         if '*' not in term and '?' not in term:
             # No contiene comodines, devuelve la lista de postings normal
@@ -859,7 +894,7 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.articles.keys())
+        res = list(self.docs.keys())
         return self.minus_posting(res, p)
 
 
@@ -966,8 +1001,6 @@ class SAR_Indexer:
         while len(p1) != 0:
             p3.append(p1[0])
             p1.pop(0)
-        
-        print(len(p3))
 
         return p3
 

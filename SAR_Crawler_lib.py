@@ -151,63 +151,49 @@ class SAR_Wiki_Crawler:
 
         # Inicialización del documento resultado
         document = {}
+        # Limpiar el texto de posibles espacios en blanco
+        cleaned_text = clean_text(text)
 
         # Buscar el título y el resumen del artículo
-        match = self.title_sum_re.match(text)
+        match = self.title_sum_re.match(cleaned_text)
         if not match:
             return None
 
-        title = match.group('title').strip()
-        summary = clean_text(match.group('summary'))
-        rest = match.group('rest')
-
+        title = match.group('title')
+        summary = match.group('summary')
+        rest_tot = match.group('rest')
         document['url'] = url
         document['title'] = title
         document['summary'] = summary
-
         sections = []
-
-        # Buscar secciones y subsecciones en el contenido restante
-        while True:
-            section_match = self.section_re.match(rest)
-            if not section_match:
-                break
-
-            section_name = section_match.group('name').strip()
-            section_text = clean_text(section_match.group('text'))
-            rest = section_match.group('rest')
-
-            subsections = []
-
-            # Buscar subsecciones dentro de la sección actual
-            while True:
-                subsection_match = self.subsection_re.match(section_text)
-                if not subsection_match:
-                    break
-
-                subsection_name = subsection_match.group('name').strip()
-                subsection_text = clean_text(subsection_match.group('text'))
-                section_text = section_text.replace(subsection_match.group(0), '').strip()
-
-                subsections.append({
-                    'name': subsection_name,
-                    'text': subsection_text
-                })
-
-            sections.append({
-                'name': section_name,
-                'text': section_text,
-                'subsections': subsections
-            })
-
-        document['sections'] = sections
-
+        # Iterable para buscar secciones
+        sections_iter = self.sections_re.finditer(rest_tot)
+        # Buscar secciones en el contenido restante
+        for _ in sections_iter:
+            sections_match = self.section_re.match(rest_tot)
+            if sections_match:
+                section_name = sections_match.group('name')
+                section_text = sections_match.group('text')
+                rest_sec = sections_match.group('rest')
+                section_dict = {
+                    'name': section_name,
+                    'text': section_text,
+                    'subsections': []
+                }
+                # Buscar subsecciones en el contenido restante de la sección
+                subsections = self.subsections_re.finditer(rest_sec)
+                for _ in subsections:
+                    subsection_match = self.subsection_re.search(rest_sec)
+                    if subsection_match:
+                        subsection_name = subsection_match.group('name')
+                        subsection_text = subsection_match.group('text')
+                        subsection_dict = {
+                            'name': subsection_name,
+                            'text': subsection_text
+                        }
+                        section_dict['subsections'].append(subsection_dict)
+                sections.append(section_dict)
         return document
-
-
-        
-
-
 
 
     def save_documents(self,

@@ -792,6 +792,10 @@ class SAR_Indexer:
         #### COMPLETADO #####
         #####################
 
+        ##################################################
+        ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
+        ##################################################
+
         # Verifica si el término contiene un comodín
         if '*' not in term and '?' not in term:
             # No contiene comodines, devuelve la lista de postings normal

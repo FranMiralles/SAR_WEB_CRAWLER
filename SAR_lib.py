@@ -476,6 +476,13 @@ class SAR_Indexer:
 
         print("========================================")
 
+
+        #Printear las posting lists
+
+        #for term in self.index['all']:
+        #    print(f"{term}: {self.index['all'][term]}")
+
+
     #################################
     ###                           ###
     ###   PARTE 2: RECUPERACION   ###

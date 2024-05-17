@@ -275,14 +275,14 @@ class SAR_Indexer:
 
                                     for i, token in enumerate(tokens):
                                         if token not in self.index[field]:
-                                            self.index[field][token] = set()
-                                        self.index[field][token].add((articleId, i))
+                                            self.index[field][token] = list()
+                                        self.index[field][token].append((articleId, i))
                      
                     else:   
                         for i, token in enumerate(tokens):
                             if token not in self.index['all']:
-                                self.index['all'][token] = set()
-                            self.index['all'][token].add((articleId, i))
+                                self.index['all'][token] = list()
+                            self.index['all'][token].append((articleId, i))
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
@@ -295,14 +295,14 @@ class SAR_Indexer:
 
                                     for token in tokens:
                                         if token not in self.index[field]:
-                                            self.index[field][token] = set()
-                                        self.index[field][token].add(articleId)
+                                            self.index[field][token] = list()
+                                        self.index[field][token].append(articleId)
 
                     else:
                         for token in tokens:
                             if token not in self.index['all']:
-                                self.index['all'][token] = set()
-                            self.index['all'][token].add(articleId)
+                                self.index['all'][token] = list()
+                            self.index['all'][token].append(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
 

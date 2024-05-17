@@ -676,23 +676,50 @@ class SAR_Indexer:
 
         return res
 
-    def get_permuterm(self, term:str, field:Optional[str]=None): # ROBERTO
+    def get_permuterm(self, term: str, field: Optional[str] = None):  # ROBERTO
         """
+        Devuelve la lista de postings asociada a un término utilizando el índice permuterm.
+        NECESARIO PARA LA AMPLIACIÓN DE PERMUTERM
 
-        Devuelve la posting list asociada a un termino utilizando el indice permuterm.
-        NECESARIO PARA LA AMPLIACION DE PERMUTERM
+        param:  "term": término para recuperar la lista de postings, "term" incluye un comodín (* o ?).
+                "field": campo sobre el que se debe recuperar la lista de postings, solo necesario si se hace la ampliación de múltiples índices.
 
-        param:  "term": termino para recuperar la posting list, "term" incluye un comodin (* o ?).
-                "field": campo sobre el que se debe recuperar la posting list, solo necesario se se hace la ampliacion de multiples indices
-
-        return: posting list
-
+        return: lista de postings
         """
+        
+        #####################
+        #### COMPLETADO #####
+        #####################
 
-        ##################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
-        ##################################################
-        pass
+        # Verifica si el término contiene un comodín
+        if '*' not in term and '?' not in term:
+            # No contiene comodines, devuelve la lista de postings normal
+            return self.get_posting(term, field)
+
+        # Reemplaza los comodines con la representación interna
+        term = term.replace('*', '%').replace('?', '_')
+
+        # Genera el permuterm con todas las rotaciones
+        permuterm = term + '$'
+        rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
+
+        # Encuentra el permuterm en el índice
+        matching_terms = set()
+        for rotation in rotations:
+            prefix = rotation.split('%')[0]
+            for perm in self.ptindex:
+                if perm.startswith(prefix):
+                    matching_terms.update(self.ptindex[perm])
+
+        # Combina las listas de postings de los términos coincidentes
+        combined_postings = set()
+        for matching_term in matching_terms:
+            if field and field in self.index and matching_term in self.index[field]:
+                combined_postings.update(self.index[field][matching_term])
+            elif matching_term in self.index['all']:
+                combined_postings.update(self.index['all'][matching_term])
+
+        return list(combined_postings)
 
 
 

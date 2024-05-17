@@ -129,62 +129,83 @@ class SAR_Wiki_Crawler:
 
 
     def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]:
-        """Devuelve una estructura tipo artículo a partir del texto en crudo
+        """Devuelve una estructura tipo artículo a partir del text en crudo
 
         Args:
             text (str): Texto en crudo del artículo de la Wikipedia
             url (str): url del artículo, para añadirlo como un campo
 
         Returns:
-            Optional[Dict[str, Union[str, List[Dict[str, Union[str, List[str]]]]]]]:
+            Optional[Dict[str, Union[str,List[Dict[str,Union[str,List[str,str]]]]]]]:
             devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
-            Los valores asociados a 'url', 'title' y 'summary' son cadenas,
-            el valor asociado a 'sections' es una lista de posibles secciones.
-            Cada sección es un diccionario con 'name', 'text' y 'subsections',
-            los valores asociados a 'name' y 'text' son cadenas y,
-            el valor asociado a 'subsections' es una lista de posibles subsecciones
-            en forma de diccionario con 'name' y 'text'.
-            en caso de no encontrar título o resumen del artículo, devolverá None
+                Los valores asociados a 'url', 'title' y 'summary' son cadenas,
+                el valor asociado a 'sections' es una lista de posibles secciones.
+                    Cada sección es un diccionario con 'name', 'text' y 'subsections',
+                        los valores asociados a 'name' y 'text' son cadenas y,
+                        el valor asociado a 'subsections' es una lista de posibles subsecciones
+                        en forma de diccionario con 'name' y 'text'.
+            en caso de no encontrar título o resúmen del artículo, devolverá None
         """
-        
         def clean_text(txt):
-            return '\n'.join(l.strip() for l in txt.split('\n') if l.strip()).strip()
+            return '\n'.join(l for l in txt.split('\n') if len(l) > 0).strip()
 
-        document = {'url': url}
+        # Inicialización del documento resultado
+        document = {}
 
-        # Utilizando la expresión regular precompilada para extraer el título y el resumen
-        match = self.title_sum_re.search(text)
+        # Buscar el título y el resumen del artículo
+        match = self.title_sum_re.match(text)
         if not match:
             return None
 
-        document['title'] = clean_text(match.group('title'))
-        document['summary'] = clean_text(match.group('summary'))
+        title = match.group('title').strip()
+        summary = clean_text(match.group('summary'))
+        rest = match.group('rest')
 
-        sections_text = match.group('rest')
+        document['url'] = url
+        document['title'] = title
+        document['summary'] = summary
+
         sections = []
 
-        # Iterar sobre cada sección utilizando la expresión regular de secciones
-        for sec_match in self.section_re.finditer(sections_text):
-            section = {
-                'name': clean_text(sec_match.group('name')),
-                'text': clean_text(sec_match.group('text')),
-                'subsections': []
-            }
+        # Buscar secciones y subsecciones en el contenido restante
+        while True:
+            section_match = self.section_re.match(rest)
+            if not section_match:
+                break
 
-            # Buscar subsecciones dentro del texto de la sección
-            rest_text = sec_match.group('rest')
-            for subsec_match in self.subsection_re.finditer(rest_text):
-                subsection = {
-                    'name': clean_text(subsec_match.group('name')),
-                    'text': clean_text(subsec_match.group('text'))
-                }
-                section['subsections'].append(subsection)
-            
-            sections.append(section)
+            section_name = section_match.group('name').strip()
+            section_text = clean_text(section_match.group('text'))
+            rest = section_match.group('rest')
+
+            subsections = []
+
+            # Buscar subsecciones dentro de la sección actual
+            while True:
+                subsection_match = self.subsection_re.match(section_text)
+                if not subsection_match:
+                    break
+
+                subsection_name = subsection_match.group('name').strip()
+                subsection_text = clean_text(subsection_match.group('text'))
+                section_text = section_text.replace(subsection_match.group(0), '').strip()
+
+                subsections.append({
+                    'name': subsection_name,
+                    'text': subsection_text
+                })
+
+            sections.append({
+                'name': section_name,
+                'text': section_text,
+                'subsections': subsections
+            })
 
         document['sections'] = sections
+
         return document
 
+
+        
 
 
 
@@ -242,7 +263,7 @@ class SAR_Wiki_Crawler:
             max_depth_level (int): Profundidad máxima de captura.
         """
 
-         # URLs válidas, ya visitadas (se hayan procesado, o no, correctamente)
+        # URLs válidas, ya visitadas (se hayan procesado, o no, correctamente)
         visited = set()
         # URLs en cola
         to_process = set(initial_urls)
@@ -369,7 +390,6 @@ class SAR_Wiki_Crawler:
 
         self.start_crawling(initial_urls=urls, document_limit=document_limit, base_filename=base_filename,
                             batch_size=batch_size, max_depth_level=0)
-
 
 
 

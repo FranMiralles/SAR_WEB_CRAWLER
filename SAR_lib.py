@@ -677,7 +677,7 @@ class SAR_Indexer:
             res = self.get_permuterm(term,field)
 
         # Caso de usar positionals
-        if (" " in term):
+        if (" " in term or ":" in term):
             res = self.get_positionals(term, field)
 
         # Caso de usar stemming
@@ -827,9 +827,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p1.sort()
-        p1 = list(set(p1))
         p2.sort()
-        p2 = list(set(p2))
         p3:list = []
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
@@ -863,9 +861,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p1.sort()
-        p1 = list(set(p1))
         p2.sort()
-        p2 = list(set(p2))
         p3:list = []
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
@@ -907,10 +903,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p1.sort()
-        # En sets para eliminar duplicados
-        p1 = list(set(p1))
         p2.sort()
-        p2 = list(set(p2))
         p3:list = []
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):

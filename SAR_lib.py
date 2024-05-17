@@ -493,18 +493,20 @@ class SAR_Indexer:
         tokens = []
 
         # Normalizar la consulta
-        elements = self.normalize_query(self, query)
+        elements = self.normalize_query(query)
 
         # Obtener las posting lists de los términos
         for element in elements:
             if element not in ['AND', 'OR', 'NOT', '(', ')']:
                 if ':' in element:
                     field, term = element.split(':')
-                    tokens.append(self.get_posting(self, term, field))
+                    tokens.append(self.get_posting(term, field))
                 else:
-                    tokens.append(self.get_posting(self, element))
+                    tokens.append(self.get_posting(element))
+                
             else:
                 tokens.append(element)
+
 
         # Pilas para operadores y operandos
         operator_stack = []
@@ -521,7 +523,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(self, operator, operand1, operand2)
+                    result = self.evaluate(operator, operand1, operand2)
                     operand_stack.append(result)
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
                 if operator_stack and operator_stack[-1] == '(':
@@ -532,7 +534,7 @@ class SAR_Indexer:
                     operator = operator_stack.pop()
                     operand2 = operand_stack.pop()
                     operand1 = operand_stack.pop()
-                    result = self.evaluate(self, operator, operand1, operand2)
+                    result = self.evaluate(operator, operand1, operand2)
                     operand_stack.append(result)
                 # Añade el operador a la pila de operadores
                 operator_stack.append(token)
@@ -542,11 +544,11 @@ class SAR_Indexer:
                     operator_stack.append('NOT')
                 else:
                     operand = tokens.pop(i+1)
-                    result = self.reverse_posting(self, operand)
+                    result = self.reverse_posting(operand)
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(self.get_posting(self, token))
+                operand_stack.append(self.get_posting(token))
             i += 1    
 
         # Procesar el resto de tokens
@@ -554,16 +556,18 @@ class SAR_Indexer:
             operator = operator_stack.pop()
             if operator == 'NOT':
                 operand = operand_stack.pop()
-                result = self.reverse_posting(self, operand)
+                result = self.reverse_posting(operand)
                 operand_stack.append(result)
             else:
                 operand2 = operand_stack.pop()
                 operand1 = operand_stack.pop()
-                result = self.evaluate(self, operator, operand1, operand2)
+                result = self.evaluate(operator, operand1, operand2)
                 operand_stack.append(result)
 
         # Devolver el resultado
         return operand_stack[-1] if operand_stack else []
+    
+
         
 
     def evaluate(self, operator:str, operand1:List, operand2:List) -> List: #David
@@ -690,6 +694,9 @@ class SAR_Indexer:
         # En caso de que el campo sea None, buscar en all
         if (field == None):
             field = "all"
+
+
+
         
         # Caso de usar permuterm
         if ("*" in term or "?" in term):

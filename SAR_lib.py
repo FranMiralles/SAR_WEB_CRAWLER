@@ -272,19 +272,19 @@ class SAR_Indexer:
                                     if tokenize:
                                         tokens = self.tokenize(content)
                                         for i, token in enumerate(tokens):
-                                            if token not in self.index[field]:
-                                                self.index[field][token] = []
-                                            #MIRAR SI YA ESTA EN LA LISTA
-                                            self.index[field][token].append((articleId, i))
+                                            if token not in self.index[field]: #Nueva entrada en el índice
+                                                self.index[field][token] = [(articleId, [i])]
+                                           #Ya existe la entrada en el índice
+                                            else: self.index[field][token][-1][1].append(i)
                                     else:
                                         url = content #Es el caso de url, se indexa como una palabra
                                         if url not in self.index[field]:
-                                            self.index[field][url] = []
+                                            self.index[field][url] = [(articleId, [0])]
 
                                         
 
 
-                                        self.index[field][url].append((articleId, 0))
+                                        else: self.index[field][url].append((articleId, 0))
 
                                     
                      
@@ -292,8 +292,9 @@ class SAR_Indexer:
                         tokens = self.tokenize(content)
                         for i, token in enumerate(tokens):
                             if token not in self.index['all']:
-                                self.index['all'][token] = set()
-                            self.index['all'][token].add((articleId, i))
+                                self.index['all'][token] = (articleId, [i])
+                            else: 
+                                self.index['all'][token][1].append(i)
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
@@ -305,17 +306,18 @@ class SAR_Indexer:
                                         tokens = self.tokenize(content)
                                         for token in tokens:
                                             if token not in self.index[field]:
-                                                self.index[field][token] = []
+                                                self.index[field][token] = [articleId]
                                             # MIRAR SI YA ESTA EN LA LISTA, comprobar si la última tupla es la misma que la actual
-                                            if not self.index[field][token] or self.index[field][token][-1] != articleId:
-                                                self.index[field][token].append(articleId)
+                                            else:
+                                                if not self.index[field][token] or self.index[field][token][-1] != articleId:
+                                                    self.index[field][token].append(articleId)
                                            
 
                                     else :
                                         url = content
                                         if url not in self.index[field]:
-                                            self.index[field][url] = []
-                                        self.index[field][url].append(articleId)
+                                            self.index[field][url] = [articleId]
+                                        else: self.index[field][url].append(articleId)
 
                                     
 
@@ -323,8 +325,10 @@ class SAR_Indexer:
                         tokens = self.tokenize(content)
                         for token in tokens:
                             if token not in self.index['all']:
-                                self.index['all'][token] = set()
-                            self.index['all'][token].add(articleId)
+                                self.index['all'][token] = [articleId]
+                            else:
+                                if not self.index['all'][token] or self.index['all'][token][-1] != articleId:
+                                    self.index['all'][token].append(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
 

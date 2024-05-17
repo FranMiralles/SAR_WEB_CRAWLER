@@ -688,29 +688,27 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         res = []
+        
 
         # En caso de que el campo sea None, buscar en all
-        if (field == None):
+        if field == None:
             field = "all"
-
-        # Caso de usar permuterm
-        if ("*" in term or "?" in term):
-            res = self.get_permuterm(term,field)
+ 
 
         # Caso de usar positionals
-        elif (" " in term or ":" in term):
+        if (" " in term or ":" in term):
             res = self.get_positionals(term, field)
+
+        # Caso de usar permuterm
+        elif("*" in term or "?" in term):
+            res = self.get_permuterm(term,field)
 
         # Caso de usar stemming
         elif (self.use_stemming):
             res = self.get_stemming(term, field)
 
-        # Si se han usado positionals, el articleId estará en la posición 0
-        elif(self.positional):
-            # Si hay posicionales y no es posicional
-            if (term in self.index[field]):
-                res = self.index[field][term][0]
-        else:
+        # Caso base
+        elif (term in self.index[field]):
             res = self.index[field][term]
 
 
@@ -730,14 +728,33 @@ class SAR_Indexer:
         return: posting list
 
         """
+
         res = []
         separedTerms = terms.split(" ")
         print(separedTerms)
-        dicSeparedTerms = {}
-        for separedTerm in separedTerms:
-            dicSeparedTerms[separedTerm] = self.get_positionals(separedTerm)
-            
-        print(self.index[field][separedTerms[0]])
+
+        # Obtener para cada termino sus articlesID en una lista, luego hacer AND para obtener solo los articlesID que aparecen en todos los terminos
+        sharedArticlesIDList = []
+        for term in separedTerms:
+            aux = []
+            postingPositional = self.get_posting(term, field)
+            for tupla in postingPositional:
+                print("Tupla:")
+                print(tupla)
+                aux.append(tupla[0])
+            aux.sort()
+            sharedArticlesIDList.append(aux)
+        # Hacer el AND
+        sharedArticlesID = sharedArticlesIDList.pop()
+        while(len(sharedArticlesIDList) != 0):
+            sharedArticlesID = self.and_posting(sharedArticlesID, sharedArticlesIDList.pop())
+        sharedArticlesID = list(set(sharedArticlesID))
+        print("SharedArticlesID:")
+        print(sharedArticlesID)
+
+        # Ahora en sharedArticlesID tengo una lista con todos los ID que se repiten en todos los términos, para buscar a partir de estos
+
+        # Lo que haré será hacer una búsqueda de cada ID en orden por términos
         
 
         # Sacarlos de index
@@ -863,8 +880,6 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        p1.sort()
-        p2.sort()
         p3:list = []
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
@@ -897,8 +912,6 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        p1.sort()
-        p2.sort()
         p3:list = []
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
@@ -922,7 +935,7 @@ class SAR_Indexer:
         return p3
 
 
-    def minus_posting(self, p1, p2): # FRAN
+    def minus_posting(self, p1:list, p2:list): # FRAN
         """
         OPCIONAL PARA TODAS LAS VERSIONES
 
@@ -939,8 +952,6 @@ class SAR_Indexer:
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
-        p1.sort()
-        p2.sort()
         p3:list = []
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):

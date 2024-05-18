@@ -275,26 +275,30 @@ class SAR_Indexer:
                                             if token not in self.index[field]: #Nueva entrada en el índice
                                                 self.index[field][token] = [(articleId, [i])]
                                            #Ya existe la entrada en el índice
-                                            else: self.index[field][token][-1][1].append(i)
+                                            else: 
+                                                # Mirar si seguimos con el mismo artId para añadir la posición o si es un nuevo artId para añadir una nueva tupla
+                                                if self.index[field][token][-1][0] != articleId:
+                                                    self.index[field][token].append((articleId, [i]))
+                                                else:
+                                                    self.index[field][token][-1][1].append(i)
                                     else:
                                         url = content #Es el caso de url, se indexa como una palabra
                                         if url not in self.index[field]:
                                             self.index[field][url] = [(articleId, [0])]
-
-                                        
-
-
                                         else: self.index[field][url].append((articleId, 0))
 
-                                    
-                     
                     else:   
                         tokens = self.tokenize(content)
                         for i, token in enumerate(tokens):
-                            if token not in self.index['all']:
-                                self.index['all'][token] = (articleId, [i])
+                            if token not in self.index['all']: #Nueva entrada en el índice
+                                self.index['all'][token] = [(articleId, [i])]
+                            #Ya existe la entrada en el índice
                             else: 
-                                self.index['all'][token][1].append(i)
+                                # Mirar si seguimos con el mismo artId para añadir la posición o si es un nuevo artId para añadir una nueva tupla
+                                if self.index['all'][token][-1][0] != articleId:
+                                    self.index['all'][token].append((articleId, [i]))
+                                else:
+                                    self.index['all'][token][-1][1].append(i)
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
@@ -480,6 +484,9 @@ class SAR_Indexer:
 
         print("========================================")
 
+
+        print(self.index['all']['fin'])
+        print(self.articles[3])
 
         #Printear las posting lists
 
@@ -720,7 +727,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         res = []
-        
+        print("GETPOSTING")
 
         # En caso de que el campo sea None, buscar en all
         if field == None:
@@ -733,18 +740,22 @@ class SAR_Indexer:
         # Caso de usar positionals
         if (" " in term or ":" in term):
             res = self.get_positionals(term, field)
+            print("hola")
 
         # Caso de usar permuterm
         elif("*" in term or "?" in term):
             res = self.get_permuterm(term,field)
+            print("hola2")
 
         # Caso de usar stemming
         elif (self.use_stemming):
             res = self.get_stemming(term, field)
+            print("hola2")
 
         # Caso base
-        elif (term in self.index[field]):
+        elif term in self.index[field]:
             print("Caso base")
+            print(term)
             res = self.index[field][term]
 
 
@@ -779,14 +790,13 @@ class SAR_Indexer:
             for tupla in postingPositional:
                 print("Tupla:")
                 print(tupla)
-                aux.append(tupla)
+                aux.append(tupla[0])
             aux.sort()
             sharedArticlesIDList.append(aux)
         # Hacer el AND
         sharedArticlesID = sharedArticlesIDList.pop()
         while(len(sharedArticlesIDList) != 0):
             sharedArticlesID = self.and_posting(sharedArticlesID, sharedArticlesIDList.pop())
-        sharedArticlesID = list(set(sharedArticlesID))
         print("SharedArticlesID:")
         print(sharedArticlesID)
 
@@ -794,6 +804,19 @@ class SAR_Indexer:
 
         # Lo que haré será hacer una búsqueda de cada ID en orden por términos
         
+        firstTerm = separedTerms.pop(0)
+        firstPosting = self.get_posting(term, field)
+        for firstTupla in firstPosting:
+            if(firstTupla[0] in sharedArticlesID):
+                for i in range(len(firstTupla[1])):
+                    print(firstTupla[1][i])
+                    pos = firstTupla[1][i]
+                    # Buscar el siguiente en cada midTerm
+                    for midTerm in separedTerms:
+                        midPosting = self.get_posting(term, field)
+                        pass
+                # Recorrer los demás términos y ver si las posiciones tienes pos contiguas
+                    
 
         # Sacarlos de index
         

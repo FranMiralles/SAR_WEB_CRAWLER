@@ -633,9 +633,9 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(self, operand1, operand2)
+                return self.and_posting(operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(self, operand1, operand2)
+                return self.or_posting(operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
         
@@ -1123,35 +1123,32 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
-        urls = list(self.urls)
-        print(urls)
         indexed_urls = []
         titles = []
     
         for art_id in solved:
-            indexed_urls.append(urls[art_id])
             docID = self.articles[art_id]['doc_id']
+            url = (self.articles[art_id]['url'])
+            indexed_urls.append(url)
             filename = self.docs[docID]
             with open(filename, 'r', encoding='utf-8') as file:
                 for line in file:
                     j = self.parse_article(line) 
-                    if j['url'] == urls[art_id]:
+                    if j['url'] == url:
+
                         titles.append(j['title'])
 
-                    
-                        
-            
-            
-        '''
+        result = list(zip(indexed_urls, titles))
+
         print('========================================')
         i = 1
-        for url in indexed_urls:
-            print(f"#{i:02d} ({'algo'}) {'titulo'}: {url}")
-            if i == 10:
+        for url, title in result:
+            print(f"#{i:02d} ({'algo'}) {title}: {url}")
+            if False:
                 break
             i += 1
         print('========================================')
-'''
+
 
 
 

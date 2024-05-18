@@ -277,13 +277,12 @@ class SAR_Wiki_Crawler:
         # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
         while queue and total_documents_captured < document_limit:
             # 1. Seleccionamos una página no procesada de la cola de prioridad
-            depth, parent_url, current_url = hq.heappop(queue)
+            depth, _, current_url = hq.heappop(queue)
             while current_url in visited:
                 if not queue:
                     break
-                depth, parent_url, current_url = hq.heappop(queue)
-            if current_url in visited:
-                continue
+                depth, _, current_url = hq.heappop(queue)
+
             visited.add(current_url)
             
             # 2. Descarga el contenido textual de la página y los enlaces que aparecen en ella.

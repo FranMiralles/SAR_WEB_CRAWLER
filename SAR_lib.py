@@ -9,6 +9,8 @@ from typing import Optional, List, Union, Dict
 import pickle
 import re
 
+from SAR_Crawler_lib import SAR_Wiki_Crawler
+
 class SAR_Indexer:
     """
     Prototipo de la clase para realizar la indexacion y la recuperacion de artículos de Wikipedia
@@ -547,7 +549,7 @@ class SAR_Indexer:
                     field, term = element.split(':')
                     tokens.append(self.get_posting(term.lower(), field.lower()))
                 else:
-                    tokens.append(self.get_posting(element))
+                    tokens.append(self.get_posting(element.lower()))
                 
             else:
                 tokens.append(element)
@@ -1120,13 +1122,36 @@ class SAR_Indexer:
         return: el numero de artículo recuperadas, para la opcion -T
 
         """
-        
-        ################
-        ## COMPLETAR  ##
-        ################
-        
+        solved = self.solve_query(query)
+        urls = list(self.urls)
+        print(urls)
+        indexed_urls = []
+        titles = []
+    
+        for art_id in solved:
+            indexed_urls.append(urls[art_id])
+            docID = self.articles[art_id]['doc_id']
+            filename = self.docs[docID]
+            with open(filename, 'r', encoding='utf-8') as file:
+                for line in file:
+                    j = self.parse_article(line) 
+                    if j['url'] == urls[art_id]:
+                        titles.append(j['title'])
 
-
+                    
+                        
+            
+            
+        '''
+        print('========================================')
+        i = 1
+        for url in indexed_urls:
+            print(f"#{i:02d} ({'algo'}) {'titulo'}: {url}")
+            if i == 10:
+                break
+            i += 1
+        print('========================================')
+'''
 
 
 

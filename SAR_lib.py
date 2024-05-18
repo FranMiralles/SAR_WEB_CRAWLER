@@ -489,7 +489,10 @@ class SAR_Indexer:
         print(self.articles[3])
 
         #Printear las posting lists
-
+        #   print("fin")
+        #   print(self.index['all']['fin'])
+        #   print("semana")
+        #   print(self.index['all']['semana'])
         #for term in self.index['all']:
         #    print(f"{term}: {self.index['all'][term]}")
 
@@ -537,7 +540,7 @@ class SAR_Indexer:
             if element not in ['AND', 'OR', 'NOT', '(', ')']:
                 if ':' in element:
                     field, term = element.split(':')
-                    tokens.append(self.get_posting(term, field))
+                    tokens.append(self.get_posting(term.lower(), field.lower()))
                 else:
                     tokens.append(self.get_posting(element))
                 
@@ -585,7 +588,7 @@ class SAR_Indexer:
                     operand_stack.append(result)
             else:
                 # Añade el término a la pila de operandos
-                operand_stack.append(self.get_posting(token))
+                operand_stack.append(token)
             i += 1    
 
         # Procesar el resto de tokens
@@ -602,8 +605,6 @@ class SAR_Indexer:
                 operand_stack.append(result)
 
         # Devolver el resultado
-        print("RESULTADOS OPERAND STACK")
-        print(operand_stack[-1])
         return operand_stack[-1] if operand_stack else []
     
 
@@ -729,10 +730,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         res = []
-        print("GETPOSTING")
-        # Protección
-        if type(term) != str:
-            return res
+        
 
         # En caso de que el campo sea None, buscar en all
         if field == None:
@@ -745,26 +743,19 @@ class SAR_Indexer:
         # Caso de usar positionals
         if (" " in term or ":" in term):
             res = self.get_positionals(term, field)
-            print("hola")
 
         # Caso de usar permuterm
         elif("*" in term or "?" in term):
             res = self.get_permuterm(term,field)
-            print("hola2")
 
         # Caso de usar stemming
         elif (self.use_stemming):
             res = self.get_stemming(term, field)
-            print("hola2")
 
         # Caso base
         elif term in self.index[field]:
-            print("Caso base")
-            print(term)
             res = self.index[field][term]
 
-        print("RESULTADOS DE GETPOSTING")
-        print(res)
         return res
 
 
@@ -784,63 +775,55 @@ class SAR_Indexer:
 
         res = []
         separedTerms = terms.split(" ")
-        print(separedTerms)
 
-        # Obtener para cada termino sus articlesID en una lista, luego hacer AND para obtener solo los articlesID que aparecen en todos los terminos
+        # Obtener para cada termino sus articlesID en una lista, luego hacer AND para obtener solo los articlesID que aparecen en todos los terminos, esto lo hago para agilizar la computación posterior de comprobar para cada posición si los siguientes términos tienen una posición seguida
         sharedArticlesIDList = []
         for term in separedTerms:
             aux = []
-            print("Llamada Realizada por cada geePosting en getPositionals")
             postingPositional = self.get_posting(term, field)
             for tupla in postingPositional:
-                print(tupla)
+                # Añado solo los articleID
                 aux.append(tupla[0])
             aux.sort()
             sharedArticlesIDList.append(aux)
-        # Hacer el AND
+        # Hacer el AND entre todos los articleID de cada término
         sharedArticlesID = sharedArticlesIDList.pop()
         while(len(sharedArticlesIDList) != 0):
             sharedArticlesID = self.and_posting(sharedArticlesID, sharedArticlesIDList.pop())
-        print("SharedArticlesID:")
-        print(sharedArticlesID)
 
         # Ahora en sharedArticlesID tengo una lista con todos los ID que se repiten en todos los términos, para buscar a partir de estos
 
-        # Lo que haré será hacer una búsqueda de cada ID en orden por términos
-        
+        # Obtengo el primer término y su posting por el que se hará el recorrido del algoritmo
         firstTerm = separedTerms.pop(0)
         firstPosting = self.get_posting(firstTerm, field)
         for firstTupla in firstPosting:
+            # Si el articleID se encuentra en la lista de articlesID comunes
             if(firstTupla[0] in sharedArticlesID):
+                # Recorrido por cada posición
                 for i in range(len(firstTupla[1])):
-                    print(firstTupla[1][i])
                     pos = firstTupla[1][i]
+                    # Esta variable permitirá controlar si se ha llegado al final con todos los términos, encontrando posiciones secuenciales
                     inAllTerms = True
                     # Buscar el siguiente en cada midTerm
                     for midTerm in separedTerms:
+                        # Para cada término, aumentamos la posición
                         pos += 1
+                        # Si algún término no tiene la posición terminamos el bucle
                         if not(inAllTerms):
                             break
+                        # Obtenemos la posting de los términos posteriores al primero y recorremos sus tuplas para encontrar aquella con articleID igual al que buscamos
                         midPosting = self.get_posting(midTerm, field)
                         for midTupla in midPosting:
                             if firstTupla[0] == midTupla[0]:
-                                print(midTupla[1])
+                                # Buscamos una ocurrencia de la posición, si no se encuentra salta una excepción y ponemos la variable inAllTerms a False, indicando que no se ha encontrado en todos los términos
                                 try:
                                     midTupla[1].index(pos)
                                 except ValueError:
                                     inAllTerms = False
+                    # Si se ha encontrado para todos los términos, se añade al resultado el articleID y la posición del primer término del sintagma en el artículo
                     if inAllTerms:
                         res.append((firstTupla[0], firstTupla[1][i]))
-
-
-
-                # Recorrer los demás términos y ver si las posiciones tienes pos contiguas
-                    
-
-        # Sacarlos de index
         
-
-
 
         return res
         ########################################################

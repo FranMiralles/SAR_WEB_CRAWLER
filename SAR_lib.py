@@ -889,16 +889,38 @@ class SAR_Indexer:
             pterm = pterm[1:] + pterm[0]
 
         print(pterm)
-        claves = list(self.ptindex[field].keys())
+        keys = list(self.ptindex[field].keys())
 
-        print(claves)
+        keysRelated = []
         if pterm[-1] == '*':
-            
+            pterm = pterm[:-1]
+            for key in keys:
+                if pterm.startswith(pterm):
+                    keysRelated.append(key)
             pass
         elif pterm[-1] == '?':
+            pterm = pterm[:-1]
+            for key in keys:
+                if pterm.startswith(pterm) and len(key) == len(key) + 1:
+                    keysRelated.append(key)
             pass
         
+        if len(keysRelated) == 0:
+            return res
+        
 
+        # Eliminar posibles duplicados
+        keysRelated = list(set(keysRelated))
+        postingsRelated = []
+        while(len(keysRelated) != 0):
+            postingsRelated.append(self.get_posting(keysRelated.pop(), field))
+            
+        if len(postingsRelated) == 0:
+            return res
+        
+        res = postingsRelated.pop(0)
+        while(len(postingsRelated) != 0):
+            res = self.and_posting(res, postingsRelated.pop()) 
 
         # self.ptindex
         return res
@@ -924,6 +946,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         res = list(self.docs.keys())
+        p = list(set(p))
         return self.minus_posting(res, p)
 
 
@@ -945,6 +968,8 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
+        p1 = list(set(p1))
+        p2 = list(set(p2))
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -977,6 +1002,8 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
+        p1 = list(set(p1))
+        p2 = list(set(p2))
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1017,6 +1044,8 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p3:list = []
+        p1 = list(set(p1))
+        p2 = list(set(p2))
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])

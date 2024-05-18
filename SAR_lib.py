@@ -741,7 +741,7 @@ class SAR_Indexer:
             res = self.get_permuterm(term,field)
 
         # Caso de usar positionals
-        if (" " in term or ":" in term):
+        elif (" " in term or ":" in term):
             res = self.get_positionals(term, field)
 
         # Caso de usar permuterm
@@ -876,35 +876,32 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
 
-        # Verifica si el término contiene un comodín
-        if '*' not in term and '?' not in term:
-            # No contiene comodines, devuelve la lista de postings normal
-            return self.get_posting(term, field)
-
         # Reemplaza los comodines con la representación interna
-        term = term.replace('*', '%').replace('?', '_')
+        # term = term.replace('*', '%').replace('?', '_')
 
         # Genera el permuterm con todas las rotaciones
-        permuterm = term + '$'
-        rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
+        # permuterm = term + '$'
+        #rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
+        print("GETPERMUTERM")
+        res = []
+        pterm = term + "$"
+        while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
+            pterm = pterm[1:] + pterm[0]
 
-        # Encuentra el permuterm en el índice
-        matching_terms = set()
-        for rotation in rotations:
-            prefix = rotation.split('%')[0]
-            for perm in self.ptindex:
-                if perm.startswith(prefix):
-                    matching_terms.update(self.ptindex[perm])
+        print(pterm)
+        claves = list(self.ptindex[field].keys())
 
-        # Combina las listas de postings de los términos coincidentes
-        combined_postings = set()
-        for matching_term in matching_terms:
-            if field and field in self.index and matching_term in self.index[field]:
-                combined_postings.update(self.index[field][matching_term])
-            elif matching_term in self.index['all']:
-                combined_postings.update(self.index['all'][matching_term])
+        print(claves)
+        if pterm[-1] == '*':
+            
+            pass
+        elif pterm[-1] == '?':
+            pass
+        
 
-        return list(combined_postings)
+
+        # self.ptindex
+        return res
 
 
 

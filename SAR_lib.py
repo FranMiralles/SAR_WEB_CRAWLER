@@ -553,8 +553,6 @@ class SAR_Indexer:
                 
             else:
                 tokens.append(element)
-
-
         # Pilas para operadores y operandos
         operator_stack = []
         operand_stack = []
@@ -638,6 +636,7 @@ class SAR_Indexer:
                 return self.or_posting(operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
+            
         
     def normalize_query(self, query:str) -> List[str]: #David
         """
@@ -952,8 +951,7 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.docs.keys())
-        p = list(set(p))
+        res = list(self.articles.keys())
         return self.minus_posting(res, p)
 
 
@@ -977,6 +975,8 @@ class SAR_Indexer:
         p3:list = []
         p1 = list(set(p1))
         p2 = list(set(p2))
+        p1.sort()
+        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1011,6 +1011,8 @@ class SAR_Indexer:
         p3:list = []
         p1 = list(set(p1))
         p2 = list(set(p2))
+        p1.sort()
+        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1051,8 +1053,8 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p3:list = []
-        p1 = list(set(p1))
         p2 = list(set(p2))
+        p2.sort()   
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1123,9 +1125,11 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
+        print(solved)
+
         indexed_urls = []
         titles = []
-    
+
         for art_id in solved:
             docID = self.articles[art_id]['doc_id']
             url = (self.articles[art_id]['url'])
@@ -1148,6 +1152,7 @@ class SAR_Indexer:
                 break
             i += 1
         print('========================================')
+        print(f"Number of results: {len(result)}")
 
 
 

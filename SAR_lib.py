@@ -250,7 +250,9 @@ class SAR_Indexer:
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 j = self.parse_article(line)  # Parsear el artículo
+
                 if self.already_in_index(j):  # Verificar si el artículo ya está indexado
+                    print(f"Article {j['url']} already indexed")
                     continue
 
                 # Tokenizar el contenido del artículo
@@ -259,7 +261,7 @@ class SAR_Indexer:
 
                 # Asignar ID único para el artículo
                 articleId = len(self.articles)
-                self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+                self.articles[articleId] = {'doc_id': docId, 'url': j['url']}
 
                 # Indexar los tokens
                 if self.positional:
@@ -316,16 +318,12 @@ class SAR_Indexer:
                                             else:
                                                 if not self.index[field][token] or self.index[field][token][-1] != articleId:
                                                     self.index[field][token].append(articleId)
-                                           
 
                                     else :
                                         url = content
                                         if url not in self.index[field]:
                                             self.index[field][url] = [articleId]
                                         else: self.index[field][url].append(articleId)
-
-                                    
-
                     else:
                         tokens = self.tokenize(content)
                         for token in tokens:
@@ -336,6 +334,8 @@ class SAR_Indexer:
                                     self.index['all'][token].append(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
+
+                print(f"Indexing article {articleId}:", len(tokens), j['title'])
                 
 
     def set_stemming(self, v:bool):
@@ -484,6 +484,8 @@ class SAR_Indexer:
             print("Positional queries are NOT allowed")
 
         print("========================================")
+
+        print(self.index['all']['fin'])
         
         #for article in self.articles:
         #    print(self.articles[article])
@@ -495,8 +497,6 @@ class SAR_Indexer:
         #   print(self.index['all']['semana'])
         #for term in self.index['all']:
         #print(list(self.ptindex.keys()))
-
-        print(self.ptindex['all'])
 
         #print article 392
         

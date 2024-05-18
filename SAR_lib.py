@@ -728,6 +728,9 @@ class SAR_Indexer:
         ########################################
         res = []
         print("GETPOSTING")
+        # Protección
+        if type(term) != str:
+            return res
 
         # En caso de que el campo sea None, buscar en all
         if field == None:
@@ -784,11 +787,9 @@ class SAR_Indexer:
         sharedArticlesIDList = []
         for term in separedTerms:
             aux = []
+            print("Llamada Realizada por cada geePosting en getPositionals")
             postingPositional = self.get_posting(term, field)
-            print("Posting positional")
-            print(postingPositional)
             for tupla in postingPositional:
-                print("Tupla:")
                 print(tupla)
                 aux.append(tupla[0])
             aux.sort()
@@ -805,16 +806,31 @@ class SAR_Indexer:
         # Lo que haré será hacer una búsqueda de cada ID en orden por términos
         
         firstTerm = separedTerms.pop(0)
-        firstPosting = self.get_posting(term, field)
+        firstPosting = self.get_posting(firstTerm, field)
         for firstTupla in firstPosting:
             if(firstTupla[0] in sharedArticlesID):
                 for i in range(len(firstTupla[1])):
                     print(firstTupla[1][i])
                     pos = firstTupla[1][i]
+                    inAllTerms = True
                     # Buscar el siguiente en cada midTerm
                     for midTerm in separedTerms:
-                        midPosting = self.get_posting(term, field)
-                        pass
+                        pos += 1
+                        if not(inAllTerms):
+                            break
+                        midPosting = self.get_posting(midTerm, field)
+                        for midTupla in midPosting:
+                            if firstTupla[0] == midTupla[0]:
+                                print(midTupla[1])
+                                try:
+                                    midTupla[1].index(pos)
+                                except ValueError:
+                                    inAllTerms = False
+                    if inAllTerms:
+                        res.append((firstTupla[0], firstTupla[1][i]))
+
+
+
                 # Recorrer los demás términos y ver si las posiciones tienes pos contiguas
                     
 

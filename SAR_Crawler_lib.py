@@ -128,72 +128,145 @@ class SAR_Wiki_Crawler:
         return None
 
 
-    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]:
-        """Devuelve una estructura tipo artículo a partir del text en crudo
+    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]: # ROBERTO
+        """Devuelve una estructura tipo artículo a partir del texto en crudo
 
         Args:
             text (str): Texto en crudo del artículo de la Wikipedia
             url (str): url del artículo, para añadirlo como un campo
 
         Returns:
-            Optional[Dict[str, Union[str,List[Dict[str,Union[str,List[str,str]]]]]]]:
-            devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
+            Optional[Dict[str, Union[str, List[Dict[str, Union[str, List[str, str]]]]]]]:
+            Devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
                 Los valores asociados a 'url', 'title' y 'summary' son cadenas,
                 el valor asociado a 'sections' es una lista de posibles secciones.
                     Cada sección es un diccionario con 'name', 'text' y 'subsections',
                         los valores asociados a 'name' y 'text' son cadenas y,
                         el valor asociado a 'subsections' es una lista de posibles subsecciones
                         en forma de diccionario con 'name' y 'text'.
-            en caso de no encontrar título o resúmen del artículo, devolverá None
+
+            En caso de no encontrar título o resumen del artículo, devolverá None
         """
         def clean_text(txt):
+            """Limpia el texto eliminando líneas vacías y recortando espacios innecesarios."""
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0).strip()
 
-        # Inicialización del documento resultado
-        document = {}
-        # Limpiar el texto de posibles espacios en blanco
-        cleaned_text = clean_text(text)
+        document = None  # Inicializa el documento como None
 
-        # Buscar el título y el resumen del artículo
-        match = self.title_sum_re.match(cleaned_text)
-        if not match:
-            return None
+        # Usa la expresión regular title_sum_re para buscar el título y el resumen en el texto
+        title_sum_match = self.title_sum_re.match(text)
+        if not title_sum_match:
+            return None  # Si no se encuentra un título y resumen válido, retorna None
 
-        title = match.group('title')
-        summary = match.group('summary')
-        rest_tot = match.group('rest')
-        document['url'] = url
-        document['title'] = title
-        document['summary'] = summary
-        sections = []
-        # Iterable para buscar secciones
-        sections_iter = self.sections_re.finditer(rest_tot)
-        # Buscar secciones en el contenido restante
-        for _ in sections_iter:
-            sections_match = self.section_re.match(rest_tot)
-            if sections_match:
-                section_name = sections_match.group('name')
-                section_text = sections_match.group('text')
-                rest_sec = sections_match.group('rest')
-                section_dict = {
-                    'name': section_name,
-                    'text': section_text,
-                    'subsections': []
-                }
-                # Buscar subsecciones en el contenido restante de la sección
-                subsections = self.subsections_re.finditer(rest_sec)
-                for _ in subsections:
-                    subsection_match = self.subsection_re.search(rest_sec)
-                    if subsection_match:
-                        subsection_name = subsection_match.group('name')
-                        subsection_text = subsection_match.group('text')
-                        subsection_dict = {
+        # Extrae y limpia el título, el resumen y el resto del texto después del resumen
+        title = clean_text(title_sum_match.group('title'))
+        summary = clean_text(title_sum_match.group('summary'))
+        rest = title_sum_match.group('rest')
+
+        sections = []  # Inicializa una lista vacía para almacenar las secciones
+        last_position = 0  # Posición inicial para recorrer el texto restante
+
+        # Itera sobre todas las secciones encontradas en el texto restante usando sections_re
+        for section_match in self.sections_re.finditer(rest):
+            section_start = section_match.start()  # Obtiene el inicio de la sección
+            if last_position < section_start:
+                section_text = rest[last_position:section_start]  # Extrae el texto de la sección
+                section_name_match = self.section_re.match(section_text)
+                if section_name_match:
+                    section_name = clean_text(section_name_match.group('name'))  # Limpia y extrae el nombre de la sección
+                    section_content = clean_text(section_name_match.group('text'))  # Limpia y extrae el contenido de la sección
+                    subsections_text = section_name_match.group('rest')  # Obtiene el texto restante que contiene subsecciones
+                    subsections = []  # Inicializa una lista vacía para almacenar las subsecciones
+
+                    last_sub_position = 0  # Posición inicial para recorrer las subsecciones
+                    # Itera sobre todas las subsecciones encontradas usando subsections_re
+                    for subsection_match in self.subsections_re.finditer(subsections_text):
+                        subsection_start = subsection_match.start()  # Obtiene el inicio de la subsección
+                        if last_sub_position < subsection_start:
+                            subsection_text = subsections_text[last_sub_position:subsection_start]  # Extrae el texto de la subsección
+                            subsection_name_match = self.subsection_re.match(subsection_text)
+                            if subsection_name_match:
+                                subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
+                                subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
+                                subsections.append({
+                                    'name': subsection_name,
+                                    'text': subsection_content
+                                })
+                        last_sub_position = subsection_start  # Actualiza la posición de la subsección
+
+                    # Procesa el texto restante de las subsecciones
+                    section_text_rest = subsections_text[last_sub_position:]
+                    subsection_name_match = self.subsection_re.match(section_text_rest)
+                    if subsection_name_match:
+                        subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
+                        subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
+                        subsections.append({
                             'name': subsection_name,
-                            'text': subsection_text
-                        }
-                        section_dict['subsections'].append(subsection_dict)
-                sections.append(section_dict)
-        return document
+                            'text': subsection_content
+                        })
+
+                    # Añade la sección (incluyendo sus subsecciones) a la lista de secciones
+                    sections.append({
+                        'name': section_name,
+                        'text': section_content,
+                        'subsections': subsections
+                    })
+            last_position = section_start  # Actualiza la posición de la sección
+
+        # Procesa el texto restante después de la última sección
+        section_text_rest = rest[last_position:]
+        section_name_match = self.section_re.match(section_text_rest)
+        if section_name_match:
+            section_name = clean_text(section_name_match.group('name'))  # Limpia y extrae el nombre de la sección
+            section_content = clean_text(section_name_match.group('text'))  # Limpia y extrae el contenido de la sección
+            subsections_text = section_name_match.group('rest')  # Obtiene el texto restante que contiene subsecciones
+            subsections = []  # Inicializa una lista vacía para almacenar las subsecciones
+
+            last_sub_position = 0  # Posición inicial para recorrer las subsecciones
+            # Itera sobre todas las subsecciones encontradas usando subsections_re
+            for subsection_match in self.subsections_re.finditer(subsections_text):
+                subsection_start = subsection_match.start()  # Obtiene el inicio de la subsección
+                if last_sub_position < subsection_start:
+                    subsection_text = subsections_text[last_sub_position:subsection_start]  # Extrae el texto de la subsección
+                    subsection_name_match = self.subsection_re.match(subsection_text)
+                    if subsection_name_match:
+                        subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
+                        subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
+                        subsections.append({
+                            'name': subsection_name,
+                            'text': subsection_content
+                        })
+                last_sub_position = subsection_start  # Actualiza la posición de la subsección
+
+            # Procesa el texto restante de las subsecciones
+            section_text_rest = subsections_text[last_sub_position:]
+            subsection_name_match = self.subsection_re.match(section_text_rest)
+            if subsection_name_match:
+                subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
+                subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
+                subsections.append({
+                    'name': subsection_name,
+                    'text': subsection_content
+                })
+
+            # Añade la sección (incluyendo sus subsecciones) a la lista de secciones
+            sections.append({
+                'name': section_name,
+                'text': section_content,
+                'subsections': subsections
+            })
+
+        # Construye el diccionario del documento con URL, título, resumen y secciones
+        document = {
+            'url': url,
+            'title': title,
+            'summary': summary,
+            'sections': sections
+        }
+
+        return document  # Retorna el documento estructurado
+
+
 
 
     def save_documents(self,

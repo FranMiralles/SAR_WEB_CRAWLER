@@ -275,26 +275,30 @@ class SAR_Indexer:
                                             if token not in self.index[field]: #Nueva entrada en el índice
                                                 self.index[field][token] = [(articleId, [i])]
                                            #Ya existe la entrada en el índice
-                                            else: self.index[field][token][-1][1].append(i)
+                                            else: 
+                                                # Mirar si seguimos con el mismo artId para añadir la posición o si es un nuevo artId para añadir una nueva tupla
+                                                if self.index[field][token][-1][0] != articleId:
+                                                    self.index[field][token].append((articleId, [i]))
+                                                else:
+                                                    self.index[field][token][-1][1].append(i)
                                     else:
                                         url = content #Es el caso de url, se indexa como una palabra
                                         if url not in self.index[field]:
                                             self.index[field][url] = [(articleId, [0])]
-
-                                        
-
-
                                         else: self.index[field][url].append((articleId, 0))
 
-                                    
-                     
                     else:   
                         tokens = self.tokenize(content)
                         for i, token in enumerate(tokens):
-                            if token not in self.index['all']:
-                                self.index['all'][token] = (articleId, [i])
+                            if token not in self.index['all']: #Nueva entrada en el índice
+                                self.index['all'][token] = [(articleId, [i])]
+                            #Ya existe la entrada en el índice
                             else: 
-                                self.index['all'][token][1].append(i)
+                                # Mirar si seguimos con el mismo artId para añadir la posición o si es un nuevo artId para añadir una nueva tupla
+                                if self.index['all'][token][-1][0] != articleId:
+                                    self.index['all'][token].append((articleId, [i]))
+                                else:
+                                    self.index['all'][token][-1][1].append(i)
                 else:
                     if self.multifield:
                         for field, tokenize in self.fields:
@@ -480,6 +484,9 @@ class SAR_Indexer:
 
         print("========================================")
 
+
+        print(self.index['all']['fin'])
+        print(self.articles[3])
 
         #Printear las posting lists
 

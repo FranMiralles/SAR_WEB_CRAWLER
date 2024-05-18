@@ -744,6 +744,7 @@ class SAR_Indexer:
 
         # Caso base
         elif (term in self.index[field]):
+            print("Caso base")
             res = self.index[field][term]
 
 
@@ -773,10 +774,12 @@ class SAR_Indexer:
         for term in separedTerms:
             aux = []
             postingPositional = self.get_posting(term, field)
+            print("Posting positional")
+            print(postingPositional)
             for tupla in postingPositional:
                 print("Tupla:")
                 print(tupla)
-                aux.append(tupla[0])
+                aux.append(tupla)
             aux.sort()
             sharedArticlesIDList.append(aux)
         # Hacer el AND

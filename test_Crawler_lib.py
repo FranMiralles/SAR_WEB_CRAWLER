@@ -6,9 +6,9 @@ initial_urls = [
 
 ]
 
-document_limit =100
+document_limit = 2
 base_filename = "wikipedia_articles.json"
-max_depth_level = 2
+max_depth_level = 3
 
 crawler = SAR_Crawler_lib.SAR_Wiki_Crawler()
 

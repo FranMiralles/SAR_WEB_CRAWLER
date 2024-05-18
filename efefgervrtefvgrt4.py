@@ -1,53 +1,26 @@
-import unittest
+import re
 
-class TestSARWikiCrawler(unittest.TestCase):
+# Texto de ejemplo
+text = "Mi número de teléfono es 123-456-7890."
 
-    def setUp(self):
-        self.crawler = SAR_Crawler_lib.SAR_Wiki_Crawler()
+# Patrón de expresión regular con grupos de captura
+pattern = re.compile(r"(\d{3})-(\d{3})-(\d{4})")
 
-    def test_parse_wikipedia_textual_content(self):
-        text = (
-            "##Videojuego##\n"
-            "Un videojuego, o juego de vídeo es un juego electrónico en el que una o más personas ...\n"
-            "==Historia==\n"
-            "Los orígenes del videojuego se remontan a la década de 1950, cuando poco después de la ...\n"
-            "==Generalidades==\n"
-            "Típicamente, los videojuegos recrean entornos y situaciones virtuales en los que el ....\n"
-            "--Tecnología--\n"
-            "Un videojuego se ejecuta gracias a un programa de software (el videojuego en sí) que es ...\n"
-            "--Plataformas--\n"
-            "Los distintos tipos de dispositivo en los que se ejecutan los videojuegos se conocen como ...\n"
-        )
-        url = "https://es.wikipedia.org/wiki/Videojuego"
-        expected_output = {
-            "url": "https://es.wikipedia.org/wiki/Videojuego",
-            "title": "Videojuego",
-            "summary": "Un videojuego, o juego de vídeo es un juego electrónico en el que una o más personas ...",
-            "sections": [
-                {
-                    "name": "Historia",
-                    "text": "Los orígenes del videojuego se remontan a la década de 1950, cuando poco después de la ...",
-                    "subsections": []
-                },
-                {
-                    "name": "Generalidades",
-                    "text": "Típicamente, los videojuegos recrean entornos y situaciones virtuales en los que el ....",
-                    "subsections": [
-                        {
-                            "name": "Tecnología",
-                            "text": "Un videojuego se ejecuta gracias a un programa de software (el videojuego en sí) que es ..."
-                        },
-                        {
-                            "name": "Plataformas",
-                            "text": "Los distintos tipos de dispositivo en los que se ejecutan los videojuegos se conocen como ..."
-                        }
-                    ]
-                }
-            ]
-        }
+# Buscar coincidencia
+match = pattern.search(text)
 
-        result = self.crawler.parse_wikipedia_textual_content(text, url)
-        self.assertEqual(result, expected_output)
-
-if __name__ == '__main__':
-    unittest.main()
+if match:
+    # group() devuelve la cadena completa que coincide con el patrón
+    print("Coincidencia completa:", match.group())  # Output: "123-456-7890"
+    
+    # group(1) devuelve el primer grupo de captura
+    print("Primer grupo:", match.group(1))  # Output: "123"
+    
+    # group(2) devuelve el segundo grupo de captura
+    print("Segundo grupo:", match.group(2))  # Output: "456"
+    
+    # group(3) devuelve el tercer grupo de captura
+    print("Tercer grupo:", match.group(3))  # Output: "7890"
+    
+    # group(1, 2, 3) devuelve una tupla con los tres grupos de captura
+    print("Todos los grupos:", match.group(1, 2, 3))  # Output: ("123", "456", "7890")

@@ -245,6 +245,8 @@ class SAR_Indexer:
         if 'all' not in self.index:
             self.index['all'] = {}
 
+        print(f"Indexing {filename}")
+
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 j = self.parse_article(line)  # Parsear el artículo
@@ -253,7 +255,6 @@ class SAR_Indexer:
 
                 # Tokenizar el contenido del artículo
                 content = j['all']
-
                 #print(f"Indexing {j['title']} with {len(tokens)} tokens")
 
                 # Asignar ID único para el artículo
@@ -335,9 +336,7 @@ class SAR_Indexer:
                                     self.index['all'][token].append(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
-
-        print(f"Indexed {filename} with {len(self.articles)} articles and {sum(len(postings) for postings in self.index['all'].values())} total tokens.")
-
+                
 
     def set_stemming(self, v:bool):
         """
@@ -418,14 +417,16 @@ class SAR_Indexer:
                     for term in self.index[field]:
                         permuted_terms = self.generate_permuterms(term)
                         for perm in permuted_terms:
-                            self.ptindex[field][perm] = term
+                            if perm not in self.ptindex[field]:
+                                self.ptindex[field][perm] = term
         else:
             if 'all' not in self.ptindex:
                 self.ptindex['all'] = {}
             for term in self.index['all']:
                 permuted_terms = self.generate_permuterms(term)
                 for perm in permuted_terms:
-                    self.ptindex['all'][perm] = term
+                    if perm not in self.ptindex['all']:
+                        self.ptindex['all'][perm] = term
 
     def generate_permuterms(self, term): #Carlos, método auxiliar
         """
@@ -483,10 +484,9 @@ class SAR_Indexer:
             print("Positional queries are NOT allowed")
 
         print("========================================")
-
-
-        print(self.index['all']['fin'])
-        print(self.articles[3])
+        
+        #for article in self.articles:
+        #    print(self.articles[article])
 
         #Printear las posting lists
         #   print("fin")
@@ -494,7 +494,12 @@ class SAR_Indexer:
         #   print("semana")
         #   print(self.index['all']['semana'])
         #for term in self.index['all']:
-        #    print(f"{term}: {self.index['all'][term]}")
+        #print(list(self.ptindex.keys()))
+
+        print(self.ptindex['all'])
+
+        #print article 392
+        
 
 
     #################################

@@ -727,7 +727,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         res = []
-        
+        print("GETPOSTING")
 
         # En caso de que el campo sea None, buscar en all
         if field == None:
@@ -740,17 +740,22 @@ class SAR_Indexer:
         # Caso de usar positionals
         if (" " in term or ":" in term):
             res = self.get_positionals(term, field)
+            print("hola")
 
         # Caso de usar permuterm
         elif("*" in term or "?" in term):
             res = self.get_permuterm(term,field)
+            print("hola2")
 
         # Caso de usar stemming
         elif (self.use_stemming):
             res = self.get_stemming(term, field)
+            print("hola2")
 
         # Caso base
-        elif (term in self.index[field]):
+        elif term in self.index[field]:
+            print("Caso base")
+            print(term)
             res = self.index[field][term]
 
 
@@ -780,6 +785,8 @@ class SAR_Indexer:
         for term in separedTerms:
             aux = []
             postingPositional = self.get_posting(term, field)
+            print("Posting positional")
+            print(postingPositional)
             for tupla in postingPositional:
                 print("Tupla:")
                 print(tupla)
@@ -790,7 +797,6 @@ class SAR_Indexer:
         sharedArticlesID = sharedArticlesIDList.pop()
         while(len(sharedArticlesIDList) != 0):
             sharedArticlesID = self.and_posting(sharedArticlesID, sharedArticlesIDList.pop())
-        sharedArticlesID = list(set(sharedArticlesID))
         print("SharedArticlesID:")
         print(sharedArticlesID)
 
@@ -798,6 +804,19 @@ class SAR_Indexer:
 
         # Lo que haré será hacer una búsqueda de cada ID en orden por términos
         
+        firstTerm = separedTerms.pop(0)
+        firstPosting = self.get_posting(term, field)
+        for firstTupla in firstPosting:
+            if(firstTupla[0] in sharedArticlesID):
+                for i in range(len(firstTupla[1])):
+                    print(firstTupla[1][i])
+                    pos = firstTupla[1][i]
+                    # Buscar el siguiente en cada midTerm
+                    for midTerm in separedTerms:
+                        midPosting = self.get_posting(term, field)
+                        pass
+                # Recorrer los demás términos y ver si las posiciones tienes pos contiguas
+                    
 
         # Sacarlos de index
         

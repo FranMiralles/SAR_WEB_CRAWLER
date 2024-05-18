@@ -602,6 +602,8 @@ class SAR_Indexer:
                 operand_stack.append(result)
 
         # Devolver el resultado
+        print("RESULTADOS OPERAND STACK")
+        print(operand_stack[-1])
         return operand_stack[-1] if operand_stack else []
     
 
@@ -761,7 +763,8 @@ class SAR_Indexer:
             print(term)
             res = self.index[field][term]
 
-
+        print("RESULTADOS DE GETPOSTING")
+        print(res)
         return res
 
 

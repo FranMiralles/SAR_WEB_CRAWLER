@@ -771,8 +771,7 @@ class SAR_Indexer:
             else:
                 res.append(element)
 
-        print("Posting de: " + term)
-        print(res)
+        
         return res
 
 
@@ -906,7 +905,6 @@ class SAR_Indexer:
         # Genera el permuterm con todas las rotaciones
         # permuterm = term + '$'
         #rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
-        print("GETPERMUTERM")
         res = []
         pterm = term + "$"
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
@@ -924,7 +922,7 @@ class SAR_Indexer:
         elif pterm[-1] == '?':
             pterm = pterm[:-1]
             for key in keys:
-                if key.startswith(pterm) and len(key) == len(key) + 1:
+                if key.startswith(pterm) and len(key) == len(pterm) + 1:
                     keysRelated.append(key)
             pass
 
@@ -938,9 +936,6 @@ class SAR_Indexer:
 
         if len(postingsRelated) == 0:
             return res
-        
-        print("PostingsRelated")
-        print(postingsRelated)
 
         res = postingsRelated.pop(0)
         while(len(postingsRelated) != 0):

@@ -133,68 +133,83 @@ class SAR_Wiki_Crawler:
 
 
     def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]:
-        """Returns an article-like structure from the raw text
+        """Devuelve una estructura tipo artÃ­culo a partir del text en crudo
 
         Args:
-            text (str): Raw text of the Wikipedia article
-            url (str): URL of the article, to add as a field
+            text (str): Texto en crudo del artÃ­culo de la Wikipedia
+            url (str): url del artÃ­culo, para aÃ±adirlo como un campo
 
         Returns:
-            Optional[Dict[str, Union[str,List[Dict[str,Union[str,List[str,str]]]]]]]:
-            returns a dictionary with the keys 'url', 'title', 'summary', 'sections':
-                The values associated with 'url', 'title', and 'summary' are strings,
-                the value associated with 'sections' is a list of possible sections.
-                    Each section is a dictionary with 'name', 'text', and 'subsections',
-                        the values associated with 'name' and 'text' are strings and,
-                        the value associated with 'subsections' is a list of possible subsections
-                        in the form of a dictionary with 'name' and 'text'.
 
-            in case of not finding a title or summary of the article, it will return None
+            Optional[Dict[str, Union[str,List[Dict[str,Union[str,List[str,str]]]]]]]:
+
+            devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
+                Los valores asociados a 'url', 'title' y 'summary' son cadenas,
+                el valor asociado a 'sections' es una lista de posibles secciones.
+                    Cada secciÃ³n es un diccionario con 'name', 'text' y 'subsections',
+                        los valores asociados a 'name' y 'text' son cadenas y,
+                        el valor asociado a 'subsections' es una lista de posibles subsecciones
+                        en forma de diccionario con 'name' y 'text'.
+
+            en caso de no encontrar tÃ­tulo o resÃºmen del artÃ­culo, devolverÃ¡ None
+
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
+        
+        for match in self.title_sum_re.finditer(text):
+            title = match.group("title")
+            summary = match.group("summary")
+            rest = match.group("rest")
 
-        document = {}
+            document = {
+                "url": url,
+                "title": title,
+                "summary": summary,
+                "sections": []
+            }
 
-        match = self.title_sum_re.match(text)
-        if match:
-            title = match.group('title')
-            summary = match.group('summary')
-            rest = match.group('rest')
-            document['url'] = url
-            document['title'] = title
-            document['summary'] = clean_text(summary)
-            sections = []
+            # Secciones
+            for section_match in self.sections_re.finditer(rest):
+                section = section_match.group(0)
+                section_match = self.section_re.match(section)
 
-            for sec_match in self.sections_re.finditer(rest):
-                sec_text = sec_match.group()
-                sec_match = self.section_re.search(sec_text)
-                if sec_match:
-                    section_name = sec_match.group('name')
-                    section_text = sec_match.group('text')
-                    subsections = []
+                if section_match is not None:
+                    section_name = section_match.group("name")
+                    section_text = clean_text(section_match.group("text"))
+                    section_rest = section_match.group("rest")
 
-                    for subsec_match in self.subsections_re.finditer(section_text):
-                        subsec_text = subsec_match.group()
-                        subsec_match = self.subsection_re.search(subsec_text)
-                        if subsec_match:
-                            subsection_name = subsec_match.group('name')
-                            subsection_text = subsec_match.group('text')
-                            subsections.append({
-                                'name': subsection_name,
-                                'text': clean_text(subsection_text)
-                            })
+                    section_dict = {
+                        "name": section_name,
+                        "text": section_text,
+                        "subsections": []
+                    }
 
-                    sections.append({
-                        'name': section_name,
-                        'text': clean_text(section_text),
-                        'subsections': subsections
-                    })
+                    # Subsecciones
+                    for subsection_match in self.subsections_re.finditer(section_rest):
+                        subsection = subsection_match.group(0)
+                        subsection_match = self.subsection_re.match(subsection)
 
-            document['sections'] = sections
+                        if subsection_match is not None:
+                            subsection_name = subsection_match.group("name")
+                            subsection_text = clean_text(subsection_match.group("text"))
+
+                            subsection_dict = {
+                                "name": subsection_name,
+                                "text": subsection_text
+                            }
+
+                            section_dict["subsections"].append(subsection_dict)
+
+                    document["sections"].append(section_dict)
+
             return document
 
-        return None
+        document = None
+
+        # COMPLETAR
+
+        return document
 
 
 

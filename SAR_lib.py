@@ -762,7 +762,15 @@ class SAR_Indexer:
         elif term in self.index[field]:
             res = self.index[field][term]
 
-        return res.sort()
+        # Quitar las posiciones para los ands or y minus...
+        resAux = res
+        res = []
+        for element in resAux:
+            if isinstance(element, tuple):
+                res.append(element[0])
+            else:
+                res.append(element)
+        return res
 
 
 
@@ -894,40 +902,41 @@ class SAR_Indexer:
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
             pterm = pterm[1:] + pterm[0]
 
-        print(pterm)
         keys = list(self.ptindex[field].keys())
 
         keysRelated = []
         if pterm[-1] == '*':
             pterm = pterm[:-1]
             for key in keys:
-                if pterm.startswith(pterm):
+                if key.startswith(pterm):
                     keysRelated.append(key)
             pass
         elif pterm[-1] == '?':
             pterm = pterm[:-1]
             for key in keys:
-                if pterm.startswith(pterm) and len(key) == len(key) + 1:
+                if key.startswith(pterm) and len(key) == len(key) + 1:
                     keysRelated.append(key)
             pass
-        
+
         if len(keysRelated) == 0:
             return res
         
-
-        # Eliminar posibles duplicados
-        keysRelated = list(set(keysRelated))
         postingsRelated = []
         while(len(keysRelated) != 0):
-            postingsRelated.append(self.get_posting(keysRelated.pop(), field))
-            
+            key = self.ptindex[field][keysRelated.pop()]
+            postingsRelated.append(self.get_posting(key, field))
+
         if len(postingsRelated) == 0:
             return res
         
+        print("PostingsRelated")
+        print(postingsRelated)
+
         res = postingsRelated.pop(0)
         while(len(postingsRelated) != 0):
-            res = self.and_posting(res, postingsRelated.pop()) 
+            res = self.or_posting(res, postingsRelated.pop()) 
 
+        print(len(res))
         # self.ptindex
         return res
 
@@ -951,7 +960,7 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.articles.keys())
+        res = list(self.articles.keys()).sort()
         return self.minus_posting(res, p)
 
 
@@ -1052,6 +1061,8 @@ class SAR_Indexer:
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
+        print("p2")
+        print(p2)
         p3:list = []
         p2 = list(set(p2))
         p2.sort()   

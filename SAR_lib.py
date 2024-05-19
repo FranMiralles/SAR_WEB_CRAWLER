@@ -750,10 +750,6 @@ class SAR_Indexer:
         elif (" " in term or ":" in term):
             res = self.get_positionals(term, field)
 
-        # Caso de usar permuterm
-        elif("*" in term or "?" in term):
-            res = self.get_permuterm(term,field)
-
         # Caso de usar stemming
         elif (self.use_stemming):
             res = self.get_stemming(term, field)
@@ -898,12 +894,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
 
-        # Reemplaza los comodines con la representación interna
-        # term = term.replace('*', '%').replace('?', '_')
-
-        # Genera el permuterm con todas las rotaciones
-        # permuterm = term + '$'
-        #rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
+        
         res = []
         pterm = term + "$"
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':

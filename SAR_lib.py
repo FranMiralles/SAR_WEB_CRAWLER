@@ -253,7 +253,7 @@ class SAR_Indexer:
             for line in file:
                 j = self.parse_article(line)  # Parsear el artículo
 
-                if self.already_in_index(j):  # Verificar si el artículo ya está indexado
+                if self.already_in_index(j):  # Verificar si el artículo ya está indexado para no volver a indexar
                     print(f"Article {j['url']} already indexed")
                     continue
 
@@ -266,9 +266,9 @@ class SAR_Indexer:
                 self.articles[articleId] = {'doc_id': docId, 'url': j['url']}
 
                 # Indexar los tokens
-                if self.positional:
+                if self.positional: #Si es positional
                         
-                    if self.multifield:
+                    if self.multifield: #Si es multifield
                         for field, tokenize in self.fields:
                                     if field not in self.index:
                                         self.index[field] = {}
@@ -292,7 +292,7 @@ class SAR_Indexer:
                                             self.index[field][url] = [(articleId, [0])]
                                         else: self.index[field][url].append((articleId, 0))
 
-                    else:   
+                    else: #Si no es multifield
                         tokens = self.tokenize(content)
                         for i, token in enumerate(tokens):
                             if token not in self.index['all']: #Nueva entrada en el índice
@@ -304,7 +304,7 @@ class SAR_Indexer:
                                     self.index['all'][token].append((articleId, [i]))
                                 else:
                                     self.index['all'][token][-1][1].append(i)
-                else:
+                else: #Si no es positional
                     if self.multifield:
                         for field, tokenize in self.fields:
                                     if field not in self.index:
@@ -322,7 +322,7 @@ class SAR_Indexer:
                                                     self.index[field][token].append(articleId)
 
                                     else :
-                                        url = content
+                                        url = content #Es el caso de url, se indexa como una palabra
                                         if url not in self.index[field]:
                                             self.index[field][url] = [articleId]
                                         else: self.index[field][url].append(articleId)
@@ -412,16 +412,16 @@ class SAR_Indexer:
         self.ptindex = {}
 
         # For multifield
-        if self.multifield:
+        if self.multifield: #Si es multifield
             for field, tokenize in self.fields:
                     if field not in self.ptindex:
                         self.ptindex[field] = {}
                     for term in self.index[field]:
-                        permuted_terms = self.generate_permuterms(term)
+                        permuted_terms = self.generate_permuterms(term) #Generar los permuterms del termino
                         for perm in permuted_terms:
                             if perm not in self.ptindex[field]:
                                 self.ptindex[field][perm] = term
-        else:
+        else: #Si no es multifield
             if 'all' not in self.ptindex:
                 self.ptindex['all'] = {}
             for term in self.index['all']:

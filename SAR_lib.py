@@ -631,6 +631,7 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
+                print(operand1)
                 return self.and_posting(operand1, operand2)
             elif operator == 'OR':
                 return self.or_posting(operand1, operand2)
@@ -761,8 +762,8 @@ class SAR_Indexer:
         # Caso base
         elif term in self.index[field]:
             res = self.index[field][term]
-
-        return res.sort()
+        print(res)
+        return res
 
 
 
@@ -973,8 +974,8 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
-        p1 = list(set(p1))
-        p2 = list(set(p2))
+        print(p1)   
+        print(p2)
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1006,8 +1007,6 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
-        p1 = list(set(p1))
-        p2 = list(set(p2))
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1048,7 +1047,6 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p3:list = []
-        p2 = list(set(p2))  
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1119,7 +1117,6 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
-        print(solved)
 
         indexed_urls = []
         titles = []

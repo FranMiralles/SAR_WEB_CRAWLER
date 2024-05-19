@@ -762,7 +762,15 @@ class SAR_Indexer:
         elif term in self.index[field]:
             res = self.index[field][term]
 
-        return res.sort()
+        # Quitar las posiciones para los ands or y minus...
+        resAux = res
+        res = []
+        for element in resAux:
+            if isinstance(element, tuple):
+                res.append(element[0])
+            else:
+                res.append(element)
+        return res
 
 
 

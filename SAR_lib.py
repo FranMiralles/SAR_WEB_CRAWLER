@@ -798,7 +798,7 @@ class SAR_Indexer:
             postingPositional = self.get_posting(term, field)
             for tupla in postingPositional:
                 # Añado solo los articleID
-                aux.append(tupla[0])
+                aux.append(tupla)
             aux.sort()
             sharedArticlesIDList.append(aux)
         # Hacer el AND entre todos los articleID de cada término
@@ -810,7 +810,11 @@ class SAR_Indexer:
 
         # Obtengo el primer término y su posting por el que se hará el recorrido del algoritmo
         firstTerm = separedTerms.pop(0)
-        firstPosting = self.get_posting(firstTerm, field)
+        if firstTerm in self.index[field]:
+            firstPosting = self.index[field][firstTerm]
+        else:
+            firstPosting = []
+
         for firstTupla in firstPosting:
             # Si el articleID se encuentra en la lista de articlesID comunes
             if(firstTupla[0] in sharedArticlesID):
@@ -827,7 +831,10 @@ class SAR_Indexer:
                         if not(inAllTerms):
                             break
                         # Obtenemos la posting de los términos posteriores al primero y recorremos sus tuplas para encontrar aquella con articleID igual al que buscamos
-                        midPosting = self.get_posting(midTerm, field)
+                        if midTerm in self.index[field]:
+                            midPosting = self.index[field][midTerm]
+                        else:
+                            midPosting = []
                         for midTupla in midPosting:
                             if firstTupla[0] == midTupla[0]:
                                 # Buscamos una ocurrencia de la posición, si no se encuentra salta una excepción y ponemos la variable inAllTerms a False, indicando que no se ha encontrado en todos los términos
@@ -897,7 +904,6 @@ class SAR_Indexer:
         # Genera el permuterm con todas las rotaciones
         # permuterm = term + '$'
         #rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
-        print("GETPERMUTERM")
         res = []
         pterm = term + "$"
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
@@ -929,9 +935,6 @@ class SAR_Indexer:
 
         if len(postingsRelated) == 0:
             return res
-        
-        print("PostingsRelated")
-        print(postingsRelated)
 
         res = postingsRelated.pop(0)
         while(len(postingsRelated) != 0):

@@ -159,7 +159,7 @@ class SAR_Indexer:
         return article['url'] in self.urls
 
 
-    def index_dir(self, root:str, **args): # alguien
+    def index_dir(self, root:str, **args): # DAVID
         """
         
         Recorre recursivamente el directorio o fichero "root" 

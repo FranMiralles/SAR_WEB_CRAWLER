@@ -771,8 +771,6 @@ class SAR_Indexer:
             else:
                 res.append(element)
 
-        print("Posting de: " + term)
-        print(res)
         return res
 
 
@@ -1068,10 +1066,6 @@ class SAR_Indexer:
         p3:list = []
         p2 = list(set(p2))
         p2.sort()
-        print("p1")
-        print(p1)
-        print("p2")
-        print(p2)
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1168,11 +1162,11 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
-        print(solved)
-
         indexed_urls = []
         titles = []
         snippets = []
+
+        print(solved)
 
         for art_id in solved:
             docID = self.articles[art_id]['doc_id']
@@ -1203,12 +1197,10 @@ class SAR_Indexer:
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")
-
         else:
-
             print('========================================')
             i = 1
-            for url, title, art_ID in result:
+            for url, title, art_ID, _ in result:
                 print(f"# {i:02d} ({ art_ID}) {title}: {url}\n")
                 if not self.show_all and i == 10:
                     break
@@ -1217,4 +1209,3 @@ class SAR_Indexer:
             print(f"Number of results: {len(result)}")
 
 
-            

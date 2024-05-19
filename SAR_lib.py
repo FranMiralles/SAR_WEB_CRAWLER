@@ -975,8 +975,6 @@ class SAR_Indexer:
         p3:list = []
         p1 = list(set(p1))
         p2 = list(set(p2))
-        p1.sort()
-        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -987,7 +985,6 @@ class SAR_Indexer:
                     p1.pop(0)
                 else:
                     p2.pop(0)
-
         return p3
 
 
@@ -1011,8 +1008,6 @@ class SAR_Indexer:
         p3:list = []
         p1 = list(set(p1))
         p2 = list(set(p2))
-        p1.sort()
-        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1053,8 +1048,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p3:list = []
-        p2 = list(set(p2))
-        p2.sort()   
+        p2 = list(set(p2))  
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1148,7 +1142,7 @@ class SAR_Indexer:
         i = 1
         for url, title in result:
             print(f"#{i:02d} ({'algo'}) {title}: {url}")
-            if False:
+            if not self.show_all and i == 10:
                 break
             i += 1
         print('========================================')

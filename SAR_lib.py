@@ -9,6 +9,8 @@ from typing import Optional, List, Union, Dict
 import pickle
 import re
 
+from SAR_Crawler_lib import SAR_Wiki_Crawler
+
 class SAR_Indexer:
     """
     Prototipo de la clase para realizar la indexacion y la recuperacion de artículos de Wikipedia
@@ -250,7 +252,9 @@ class SAR_Indexer:
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 j = self.parse_article(line)  # Parsear el artículo
+
                 if self.already_in_index(j):  # Verificar si el artículo ya está indexado
+                    print(f"Article {j['url']} already indexed")
                     continue
 
                 # Tokenizar el contenido del artículo
@@ -259,7 +263,7 @@ class SAR_Indexer:
 
                 # Asignar ID único para el artículo
                 articleId = len(self.articles)
-                self.articles[articleId] = {'doc_id': docId, 'position': len(self.articles)}
+                self.articles[articleId] = {'doc_id': docId, 'url': j['url']}
 
                 # Indexar los tokens
                 if self.positional:
@@ -316,16 +320,12 @@ class SAR_Indexer:
                                             else:
                                                 if not self.index[field][token] or self.index[field][token][-1] != articleId:
                                                     self.index[field][token].append(articleId)
-                                           
 
                                     else :
                                         url = content
                                         if url not in self.index[field]:
                                             self.index[field][url] = [articleId]
                                         else: self.index[field][url].append(articleId)
-
-                                    
-
                     else:
                         tokens = self.tokenize(content)
                         for token in tokens:
@@ -336,6 +336,8 @@ class SAR_Indexer:
                                     self.index['all'][token].append(articleId)
 
                 self.urls.add(j['url'])  # Añadir la URL al conjunto de URLs
+
+                print(f"Indexing article {articleId}:", len(tokens), j['title'])
                 
 
     def set_stemming(self, v:bool):
@@ -484,6 +486,8 @@ class SAR_Indexer:
             print("Positional queries are NOT allowed")
 
         print("========================================")
+
+        print(self.index['all']['fin'])
         
         #for article in self.articles:
         #    print(self.articles[article])
@@ -495,8 +499,6 @@ class SAR_Indexer:
         #   print(self.index['all']['semana'])
         #for term in self.index['all']:
         #print(list(self.ptindex.keys()))
-
-        print(self.ptindex['all'])
 
         #print article 392
         
@@ -547,12 +549,10 @@ class SAR_Indexer:
                     field, term = element.split(':')
                     tokens.append(self.get_posting(term.lower(), field.lower()))
                 else:
-                    tokens.append(self.get_posting(element))
+                    tokens.append(self.get_posting(element.lower()))
                 
             else:
                 tokens.append(element)
-
-
         # Pilas para operadores y operandos
         operator_stack = []
         operand_stack = []
@@ -631,11 +631,12 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                return self.and_posting(self, operand1, operand2)
+                return self.and_posting(operand1, operand2)
             elif operator == 'OR':
-                return self.or_posting(self, operand1, operand2)
+                return self.or_posting(operand1, operand2)
             else:
                 raise ValueError(f"Operador inválido: {operator}")
+            
         
     def normalize_query(self, query:str) -> List[str]: #David
         """
@@ -950,8 +951,7 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.docs.keys())
-        p = list(set(p))
+        res = list(self.articles.keys())
         return self.minus_posting(res, p)
 
 
@@ -975,6 +975,8 @@ class SAR_Indexer:
         p3:list = []
         p1 = list(set(p1))
         p2 = list(set(p2))
+        p1.sort()
+        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1009,6 +1011,8 @@ class SAR_Indexer:
         p3:list = []
         p1 = list(set(p1))
         p2 = list(set(p2))
+        p1.sort()
+        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1049,8 +1053,8 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
         p3:list = []
-        p1 = list(set(p1))
         p2 = list(set(p2))
+        p2.sort()   
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1120,12 +1124,35 @@ class SAR_Indexer:
         return: el numero de artículo recuperadas, para la opcion -T
 
         """
-        
-        ################
-        ## COMPLETAR  ##
-        ################
-        
+        solved = self.solve_query(query)
+        print(solved)
 
+        indexed_urls = []
+        titles = []
+
+        for art_id in solved:
+            docID = self.articles[art_id]['doc_id']
+            url = (self.articles[art_id]['url'])
+            indexed_urls.append(url)
+            filename = self.docs[docID]
+            with open(filename, 'r', encoding='utf-8') as file:
+                for line in file:
+                    j = self.parse_article(line) 
+                    if j['url'] == url:
+
+                        titles.append(j['title'])
+
+        result = list(zip(indexed_urls, titles))
+
+        print('========================================')
+        i = 1
+        for url, title in result:
+            print(f"#{i:02d} ({'algo'}) {title}: {url}")
+            if False:
+                break
+            i += 1
+        print('========================================')
+        print(f"Number of results: {len(result)}")
 
 
 

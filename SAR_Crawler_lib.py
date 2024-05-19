@@ -26,12 +26,16 @@ class SAR_Wiki_Crawler:
         }
 
         # Expresiones regulares útiles para el parseo del documento
+        # Expresión regular para detectar si es un enlace de la Wikipedia
         self.title_sum_re = re.compile(r"##(?P<title>.+)##\n(?P<summary>((?!==.+==).+|\n)+)(?P<rest>(.+|\n)*)")
+        # Expresión regular para detectar secciones
         self.sections_re = re.compile(r"==.+==\n")
+        # Expresión regular para extraer una sección y su contenido
         self.section_re = re.compile(r"==(?P<name>.+)==\n(?P<text>((?!--.+--).+|\n)*)(?P<rest>(.+|\n)*)")
+        # Expresión regular para detectar subsecciones
         self.subsections_re = re.compile(r"--.+--\n")
+        # Expresión regular para extraer una subsección y su contenido
         self.subsection_re = re.compile(r"--(?P<name>.+)--\n(?P<text>(.+|\n)*)")
-
 
     def is_valid_url(self, url: str) -> bool:   # fullmatching cambiado por fullmatch
         """Verifica si es una dirección válida para indexar
@@ -128,144 +132,69 @@ class SAR_Wiki_Crawler:
         return None
 
 
-    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]: # ROBERTO
-        """Devuelve una estructura tipo artículo a partir del texto en crudo
+    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]:
+        """Returns an article-like structure from the raw text
 
         Args:
-            text (str): Texto en crudo del artículo de la Wikipedia
-            url (str): url del artículo, para añadirlo como un campo
+            text (str): Raw text of the Wikipedia article
+            url (str): URL of the article, to add as a field
 
         Returns:
-            Optional[Dict[str, Union[str, List[Dict[str, Union[str, List[str, str]]]]]]]:
-            Devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
-                Los valores asociados a 'url', 'title' y 'summary' son cadenas,
-                el valor asociado a 'sections' es una lista de posibles secciones.
-                    Cada sección es un diccionario con 'name', 'text' y 'subsections',
-                        los valores asociados a 'name' y 'text' son cadenas y,
-                        el valor asociado a 'subsections' es una lista de posibles subsecciones
-                        en forma de diccionario con 'name' y 'text'.
+            Optional[Dict[str, Union[str,List[Dict[str,Union[str,List[str,str]]]]]]]:
+            returns a dictionary with the keys 'url', 'title', 'summary', 'sections':
+                The values associated with 'url', 'title', and 'summary' are strings,
+                the value associated with 'sections' is a list of possible sections.
+                    Each section is a dictionary with 'name', 'text', and 'subsections',
+                        the values associated with 'name' and 'text' are strings and,
+                        the value associated with 'subsections' is a list of possible subsections
+                        in the form of a dictionary with 'name' and 'text'.
 
-            En caso de no encontrar título o resumen del artículo, devolverá None
+            in case of not finding a title or summary of the article, it will return None
         """
         def clean_text(txt):
-            """Limpia el texto eliminando líneas vacías y recortando espacios innecesarios."""
-            return '\n'.join(l for l in txt.split('\n') if len(l) > 0).strip()
+            return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
 
-        document = None  # Inicializa el documento como None
+        document = {}
 
-        # Usa la expresión regular title_sum_re para buscar el título y el resumen en el texto
-        title_sum_match = self.title_sum_re.match(text)
-        if not title_sum_match:
-            return None  # Si no se encuentra un título y resumen válido, retorna None
+        match = self.title_sum_re.match(text)
+        if match:
+            title = match.group('title')
+            summary = match.group('summary')
+            rest = match.group('rest')
+            document['url'] = url
+            document['title'] = title
+            document['summary'] = clean_text(summary)
+            sections = []
 
-        # Extrae y limpia el título, el resumen y el resto del texto después del resumen
-        title = clean_text(title_sum_match.group('title'))
-        summary = clean_text(title_sum_match.group('summary'))
-        rest = title_sum_match.group('rest')
+            for sec_match in self.sections_re.finditer(rest):
+                sec_text = sec_match.group()
+                sec_match = self.section_re.search(sec_text)
+                if sec_match:
+                    section_name = sec_match.group('name')
+                    section_text = sec_match.group('text')
+                    subsections = []
 
-        sections = []  # Inicializa una lista vacía para almacenar las secciones
-        last_position = 0  # Posición inicial para recorrer el texto restante
+                    for subsec_match in self.subsections_re.finditer(section_text):
+                        subsec_text = subsec_match.group()
+                        subsec_match = self.subsection_re.search(subsec_text)
+                        if subsec_match:
+                            subsection_name = subsec_match.group('name')
+                            subsection_text = subsec_match.group('text')
+                            subsections.append({
+                                'name': subsection_name,
+                                'text': clean_text(subsection_text)
+                            })
 
-        # Itera sobre todas las secciones encontradas en el texto restante usando sections_re
-        for section_match in self.sections_re.finditer(rest):
-            section_start = section_match.start()  # Obtiene el inicio de la sección
-            if last_position < section_start:
-                section_text = rest[last_position:section_start]  # Extrae el texto de la sección
-                section_name_match = self.section_re.match(section_text)
-                if section_name_match:
-                    section_name = clean_text(section_name_match.group('name'))  # Limpia y extrae el nombre de la sección
-                    section_content = clean_text(section_name_match.group('text'))  # Limpia y extrae el contenido de la sección
-                    subsections_text = section_name_match.group('rest')  # Obtiene el texto restante que contiene subsecciones
-                    subsections = []  # Inicializa una lista vacía para almacenar las subsecciones
-
-                    last_sub_position = 0  # Posición inicial para recorrer las subsecciones
-                    # Itera sobre todas las subsecciones encontradas usando subsections_re
-                    for subsection_match in self.subsections_re.finditer(subsections_text):
-                        subsection_start = subsection_match.start()  # Obtiene el inicio de la subsección
-                        if last_sub_position < subsection_start:
-                            subsection_text = subsections_text[last_sub_position:subsection_start]  # Extrae el texto de la subsección
-                            subsection_name_match = self.subsection_re.match(subsection_text)
-                            if subsection_name_match:
-                                subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
-                                subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
-                                subsections.append({
-                                    'name': subsection_name,
-                                    'text': subsection_content
-                                })
-                        last_sub_position = subsection_start  # Actualiza la posición de la subsección
-
-                    # Procesa el texto restante de las subsecciones
-                    section_text_rest = subsections_text[last_sub_position:]
-                    subsection_name_match = self.subsection_re.match(section_text_rest)
-                    if subsection_name_match:
-                        subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
-                        subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
-                        subsections.append({
-                            'name': subsection_name,
-                            'text': subsection_content
-                        })
-
-                    # Añade la sección (incluyendo sus subsecciones) a la lista de secciones
                     sections.append({
                         'name': section_name,
-                        'text': section_content,
+                        'text': clean_text(section_text),
                         'subsections': subsections
                     })
-            last_position = section_start  # Actualiza la posición de la sección
 
-        # Procesa el texto restante después de la última sección
-        section_text_rest = rest[last_position:]
-        section_name_match = self.section_re.match(section_text_rest)
-        if section_name_match:
-            section_name = clean_text(section_name_match.group('name'))  # Limpia y extrae el nombre de la sección
-            section_content = clean_text(section_name_match.group('text'))  # Limpia y extrae el contenido de la sección
-            subsections_text = section_name_match.group('rest')  # Obtiene el texto restante que contiene subsecciones
-            subsections = []  # Inicializa una lista vacía para almacenar las subsecciones
+            document['sections'] = sections
+            return document
 
-            last_sub_position = 0  # Posición inicial para recorrer las subsecciones
-            # Itera sobre todas las subsecciones encontradas usando subsections_re
-            for subsection_match in self.subsections_re.finditer(subsections_text):
-                subsection_start = subsection_match.start()  # Obtiene el inicio de la subsección
-                if last_sub_position < subsection_start:
-                    subsection_text = subsections_text[last_sub_position:subsection_start]  # Extrae el texto de la subsección
-                    subsection_name_match = self.subsection_re.match(subsection_text)
-                    if subsection_name_match:
-                        subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
-                        subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
-                        subsections.append({
-                            'name': subsection_name,
-                            'text': subsection_content
-                        })
-                last_sub_position = subsection_start  # Actualiza la posición de la subsección
-
-            # Procesa el texto restante de las subsecciones
-            section_text_rest = subsections_text[last_sub_position:]
-            subsection_name_match = self.subsection_re.match(section_text_rest)
-            if subsection_name_match:
-                subsection_name = clean_text(subsection_name_match.group('name'))  # Limpia y extrae el nombre de la subsección
-                subsection_content = clean_text(subsection_name_match.group('text'))  # Limpia y extrae el contenido de la subsección
-                subsections.append({
-                    'name': subsection_name,
-                    'text': subsection_content
-                })
-
-            # Añade la sección (incluyendo sus subsecciones) a la lista de secciones
-            sections.append({
-                'name': section_name,
-                'text': section_content,
-                'subsections': subsections
-            })
-
-        # Construye el diccionario del documento con URL, título, resumen y secciones
-        document = {
-            'url': url,
-            'title': title,
-            'summary': summary,
-            'sections': sections
-        }
-
-        return document  # Retorna el documento estructurado
-
+        return None
 
 
 
@@ -348,13 +277,12 @@ class SAR_Wiki_Crawler:
         # Repetimos el proceso hasta que no haya urls en la cola o se alcance el límite de documentos
         while queue and total_documents_captured < document_limit:
             # 1. Seleccionamos una página no procesada de la cola de prioridad
-            depth, parent_url, current_url = hq.heappop(queue)
+            depth, _, current_url = hq.heappop(queue)
             while current_url in visited:
                 if not queue:
                     break
-                depth, parent_url, current_url = hq.heappop(queue)
-            if current_url in visited:
-                continue
+                depth, _, current_url = hq.heappop(queue)
+
             visited.add(current_url)
             
             # 2. Descarga el contenido textual de la página y los enlaces que aparecen en ella.

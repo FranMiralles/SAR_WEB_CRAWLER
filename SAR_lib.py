@@ -487,14 +487,14 @@ class SAR_Indexer:
 
         print("========================================")
 
-        print(self.index['all']['fin'])
+        #print(self.index['all']['fin'])
         
         #for article in self.articles:
         #    print(self.articles[article])
 
         #Printear las posting lists
         #   print("fin")
-        #   print(self.index['all']['fin'])
+        print(self.index['all']['precisión'])
         #   print("semana")
         #   print(self.index['all']['semana'])
         #for term in self.index['all']:
@@ -1100,6 +1100,25 @@ class SAR_Indexer:
             else:
                 print(query)
         return not errors
+    
+    def make_snippet(self, text:str, terms:List[str], window:int=50) -> str:
+        """
+        Crea un snippet para un texto y una lista de términos.
+        
+        Args:
+            text (str): El texto del que se generará el snippet.
+            terms (List[str]): La lista de términos que deben aparecer en el snippet.
+            window (int): El tamaño de la ventana de texto alrededor de los términos.
+
+        Returns:
+            str: El snippet generado.
+        """
+        snippet = ''
+        for term in terms:
+            index = text.lower().find(term)
+            if index != -1:
+                snippet += '...' + text[index-window:index+window] + '...'
+        return snippet
 
 
     def solve_and_show(self, query:str): # ROBERTO

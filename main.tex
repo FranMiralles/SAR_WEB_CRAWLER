@@ -72,6 +72,11 @@ Grado en Ingeniería Informática
 \newpage
 
 \section{SAR\_Crawler\_Lib.py}
+
+El objetivo de esta sección es implementar un sistema de crawling  para descargar artículos de Wikipedia  y guardarlos en formato JSON. Este sistema permite iniciar el crawling desde una URL o archivo de URLs, procesar y estructurar el contenido de las páginas, y controlar la profundidad del crawling. Es fundamental para la indexación y consulta de artículos en la segunda parte del proyecto.
+
+\subsection{start\_crawling()}
+El método start\_crawling captura contenido de Wikipedia desde una lista inicial de URLs hasta alcanzar un número máximo de documentos o agotar las URLs. Utiliza estructuras de datos para rastrear URLs visitadas, pendientes y en proceso. Descarga y analiza el contenido de cada URL, añadiendo nuevos enlaces válidos para procesar. El contenido textual descargado se analiza mediante una llamada a self.parse\_wikipedia\_textual\_content, que genera un diccionario estructurado del artículo. Los documentos capturados se guardan periódicamente en lotes si se especifica un tamaño de lote, o al finalizar el proceso. Este enfoque la captura de los datos, respetando los límites de documentos y profundidad establecidos.
 \subsection{parse\_wikipedia\_textual\_content()}
 El método \texttt{parse\_wikipedia\_textual\_content} convierte el texto crudo de un artículo de Wikipedia en una estructura organizada y fácil de manejar. A continuación, se describen los pasos y componentes clave del método:
 
@@ -86,9 +91,6 @@ A continuación, se inicializa un diccionario con los campos \texttt{url}, \text
 Dentro de cada sección, se encuentran las subsecciones. Para cada subsección, se identifica el nombre y el contenido, se crea un diccionario para la subsección y se añade a la lista de subsecciones de la sección correspondiente.
 
 Finalmente, se añaden las secciones (con sus subsecciones) al diccionario del artículo. El método devuelve un diccionario estructurado con la información del artículo, o \texttt{None} si no se pudo extraer título ni resumen.
-
-\subsection{start\_crawling()}
-El método start\_crawling captura contenido de Wikipedia desde una lista inicial de URLs hasta alcanzar un número máximo de documentos o agotar las URLs. Utiliza estructuras de datos para rastrear URLs visitadas, pendientes y en proceso. Descarga y analiza el contenido de cada URL, añadiendo nuevos enlaces válidos para procesar. El contenido textual descargado se analiza mediante una llamada a self.parse\_wikipedia\_textual\_content, que genera un diccionario estructurado del artículo. Los documentos capturados se guardan periódicamente en lotes si se especifica un tamaño de lote, o al finalizar el proceso. Este enfoque la captura de los datos, respetando los límites de documentos y profundidad establecidos.
 
 
 \section{SAR\_lib.py}

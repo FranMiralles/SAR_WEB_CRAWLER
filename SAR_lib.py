@@ -770,6 +770,9 @@ class SAR_Indexer:
                 res.append(element[0])
             else:
                 res.append(element)
+
+        print("Posting de: " + term)
+        print(res)
         return res
 
 
@@ -960,7 +963,8 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        res = list(self.articles.keys()).sort()
+        res = list(self.articles.keys())
+        res.sort()
         return self.minus_posting(res, p)
 
 
@@ -1061,11 +1065,13 @@ class SAR_Indexer:
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
-        print("p2")
-        print(p2)
         p3:list = []
         p2 = list(set(p2))
-        p2.sort()   
+        p2.sort()
+        print("p1")
+        print(p1)
+        print("p2")
+        print(p2)
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])

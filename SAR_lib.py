@@ -882,13 +882,15 @@ class SAR_Indexer:
 
     def get_permuterm(self, term: str, field: Optional[str] = None):  # ROBERTO
         """
-        Devuelve la lista de postings asociada a un término utilizando el índice permuterm.
-        NECESARIO PARA LA AMPLIACIÓN DE PERMUTERM
 
-        param:  "term": término para recuperar la lista de postings, "term" incluye un comodín (* o ?).
-                "field": campo sobre el que se debe recuperar la lista de postings, solo necesario si se hace la ampliación de múltiples índices.
+        Devuelve la posting list asociada a un termino utilizando el indice permuterm.
+        NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
-        return: lista de postings
+        param:  "term": termino para recuperar la posting list, "term" incluye un comodin (* o ?).
+                "field": campo sobre el que se debe recuperar la posting list, solo necesario se se hace la ampliacion de multiples indices
+
+        return: posting list
+
         """
         
         #####################
@@ -899,21 +901,26 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
 
-        
         res = []
         pterm = term + "$"
+
+        # Movemos el comodín al final, rotando el término
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
             pterm = pterm[1:] + pterm[0]
 
+        # Obtenemos las claves del índice permuterm
         keys = list(self.ptindex[field].keys())
 
         keysRelated = []
+        # Si el comodín es '*', buscamos todas las claves que empiecen por el término
         if pterm[-1] == '*':
             pterm = pterm[:-1]
             for key in keys:
                 if key.startswith(pterm):
                     keysRelated.append(key)
             pass
+        # Si el comodín es '?', buscamos todas las claves que empiecen por el término 
+        # y tengan una longitud de una unidad superior
         elif pterm[-1] == '?':
             pterm = pterm[:-1]
             for key in keys:
@@ -926,18 +933,19 @@ class SAR_Indexer:
         
         postingsRelated = []
         while(len(keysRelated) != 0):
+            # Obtenemos la posting list de cada clave relacionada
             key = self.ptindex[field][keysRelated.pop()]
+            # Añadimos la posting list a la lista de posting lists
             postingsRelated.append(self.get_posting(key, field))
 
         if len(postingsRelated) == 0:
             return res
 
+        # Realizamos un OR entre todas las posting lists
         res = postingsRelated.pop(0)
         while(len(postingsRelated) != 0):
             res = self.or_posting(res, postingsRelated.pop()) 
 
-
-        # self.ptindex
         return res
 
 

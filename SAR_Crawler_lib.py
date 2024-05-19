@@ -26,7 +26,7 @@ class SAR_Wiki_Crawler:
         }
 
         # Expresiones regulares útiles para el parseo del documento
-        # Expresión regular para detectar si es un enlace de la Wikipedia
+        # Expresión regular para extraer el título y el resumen de un artículo
         self.title_sum_re = re.compile(r"##(?P<title>.+)##\n(?P<summary>((?!==.+==).+|\n)+)(?P<rest>(.+|\n)*)")
         # Expresión regular para detectar secciones
         self.sections_re = re.compile(r"==.+==\n")

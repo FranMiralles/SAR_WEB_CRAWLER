@@ -1219,4 +1219,3 @@ class SAR_Indexer:
             print(f"Number of results: {len(result)}")
         print(self.index['all']['fin'])
 
-

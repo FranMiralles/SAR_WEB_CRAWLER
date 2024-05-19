@@ -921,7 +921,7 @@ class SAR_Indexer:
         elif pterm[-1] == '?':
             pterm = pterm[:-1]
             for key in keys:
-                if key.startswith(pterm) and len(key) == len(key) + 1:
+                if key.startswith(pterm) and len(key) == len(pterm) + 1:
                     keysRelated.append(key)
             pass
 

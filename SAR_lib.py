@@ -771,7 +771,6 @@ class SAR_Indexer:
             else:
                 res.append(element)
 
-        
         return res
 
 
@@ -799,7 +798,7 @@ class SAR_Indexer:
             postingPositional = self.get_posting(term, field)
             for tupla in postingPositional:
                 # Añado solo los articleID
-                aux.append(tupla)
+                aux.append(tupla[0])
             aux.sort()
             sharedArticlesIDList.append(aux)
         # Hacer el AND entre todos los articleID de cada término
@@ -811,11 +810,7 @@ class SAR_Indexer:
 
         # Obtengo el primer término y su posting por el que se hará el recorrido del algoritmo
         firstTerm = separedTerms.pop(0)
-        if firstTerm in self.index[field]:
-            firstPosting = self.index[field][firstTerm]
-        else:
-            firstPosting = []
-
+        firstPosting = self.get_posting(firstTerm, field)
         for firstTupla in firstPosting:
             # Si el articleID se encuentra en la lista de articlesID comunes
             if(firstTupla[0] in sharedArticlesID):
@@ -832,10 +827,7 @@ class SAR_Indexer:
                         if not(inAllTerms):
                             break
                         # Obtenemos la posting de los términos posteriores al primero y recorremos sus tuplas para encontrar aquella con articleID igual al que buscamos
-                        if midTerm in self.index[field]:
-                            midPosting = self.index[field][midTerm]
-                        else:
-                            midPosting = []
+                        midPosting = self.get_posting(midTerm, field)
                         for midTupla in midPosting:
                             if firstTupla[0] == midTupla[0]:
                                 # Buscamos una ocurrencia de la posición, si no se encuentra salta una excepción y ponemos la variable inAllTerms a False, indicando que no se ha encontrado en todos los términos
@@ -905,6 +897,7 @@ class SAR_Indexer:
         # Genera el permuterm con todas las rotaciones
         # permuterm = term + '$'
         #rotations = [permuterm[i:] + permuterm[:i] for i in range(len(permuterm))]
+        print("GETPERMUTERM")
         res = []
         pterm = term + "$"
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
@@ -922,7 +915,7 @@ class SAR_Indexer:
         elif pterm[-1] == '?':
             pterm = pterm[:-1]
             for key in keys:
-                if key.startswith(pterm) and len(key) == len(pterm) + 1:
+                if key.startswith(pterm) and len(key) == len(key) + 1:
                     keysRelated.append(key)
             pass
 
@@ -936,6 +929,9 @@ class SAR_Indexer:
 
         if len(postingsRelated) == 0:
             return res
+        
+        print("PostingsRelated")
+        print(postingsRelated)
 
         res = postingsRelated.pop(0)
         while(len(postingsRelated) != 0):
@@ -1070,10 +1066,6 @@ class SAR_Indexer:
         p3:list = []
         p2 = list(set(p2))
         p2.sort()
-        print("p1")
-        print(p1)
-        print("p2")
-        print(p2)
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1170,11 +1162,11 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
-        print(solved)
-
         indexed_urls = []
         titles = []
         snippets = []
+
+        print(solved)
 
         for art_id in solved:
             docID = self.articles[art_id]['doc_id']
@@ -1195,22 +1187,21 @@ class SAR_Indexer:
                             snippets.append(currentSnippet)
 
 
-        result = list(zip(indexed_urls, titles, solved, snippets))
+        result = list(zip(indexed_urls, titles, solved))
 
         if(self.show_snippet):
             print('========================================')
             i = 1
-            for url, title, art_ID, snippet in result:
-                print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n {snippet}\n")
+            for url, title, art_ID in result:
+                print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n")
+                print(f"snippets[i-1]\n")
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")
-
         else:
-
             print('========================================')
             i = 1
-            for url, title, art_ID in result:
+            for url, title, art_ID, in result:
                 print(f"# {i:02d} ({ art_ID}) {title}: {url}\n")
                 if not self.show_all and i == 10:
                     break
@@ -1219,4 +1210,3 @@ class SAR_Indexer:
             print(f"Number of results: {len(result)}")
 
 
-            

@@ -190,6 +190,9 @@ Después aplica el siguiente algoritmo: se utilizan dos pilas, una para operador
 \subsubsection{normalize\_query()}
 El objetivo del método \texttt{normalize\_query} es convertir la consulta en una lista compuesta de operadores y operandos. Primero, se recorre la consulta para separarla en palabras, a menos que se encuentren dentro de comillas dobles, indicando una consulta posicional, en cuyo caso los espacios dentro de las comillas no separan las palabras. Además, se asegura de que los paréntesis estén correctamente separados de los operandos en la consulta normalizada. Posteriormente, se recorre nuevamente la consulta ya normalizada para insertar operadores lógicos \textit{AND} entre los operandos cuando el usuario no los haya incluido explícitamente. Esto garantiza que la consulta esté estructurada de manera clara y que los operadores lógicos estén presentes donde sean necesarios.
 
+\subsubsection{evaluate()}
+Método que se encarga de evaluar las operaciones con los operandos \textit{AND} y \textit{NOT}.
+
 \subsubsection{get\_posting()}
 Obtiene una lista de artículos relacionados con los parámetros de entrada del método.
 Los parámetros son: el término que se consulta y el campo que indica el diccionario indexado en el que buscar, siendo opcional (si no se introduce, se busca en el campo \textit{all}).

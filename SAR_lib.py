@@ -631,7 +631,6 @@ class SAR_Indexer:
             ValueError: Si el operador no es 'AND' ni 'OR'.
             """
             if operator == 'AND':
-                print(operand1)
                 return self.and_posting(operand1, operand2)
             elif operator == 'OR':
                 return self.or_posting(operand1, operand2)
@@ -762,7 +761,7 @@ class SAR_Indexer:
         # Caso base
         elif term in self.index[field]:
             res = self.index[field][term]
-        print(res)
+
         return res
 
 
@@ -974,8 +973,6 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
-        print(p1)   
-        print(p2)
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1117,7 +1114,6 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
-
         indexed_urls = []
         titles = []
 
@@ -1130,25 +1126,16 @@ class SAR_Indexer:
                 for line in file:
                     j = self.parse_article(line) 
                     if j['url'] == url:
-
                         titles.append(j['title'])
 
-        result = list(zip(indexed_urls, titles))
+        result = list(zip(indexed_urls, titles, solved))
 
         print('========================================')
         i = 1
-        for url, title in result:
-            print(f"#{i:02d} ({'algo'}) {title}: {url}")
+        for url, title, art_ID in result:
+            print(f"#{i:02d} ({ art_ID}) {title}: {url}")
             if not self.show_all and i == 10:
                 break
             i += 1
         print('========================================')
         print(f"Number of results: {len(result)}")
-
-
-
-
-
-
-        
-

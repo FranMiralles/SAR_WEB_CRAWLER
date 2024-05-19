@@ -800,7 +800,7 @@ class SAR_Indexer:
             postingPositional = self.get_posting(term, field)
             for tupla in postingPositional:
                 # Añado solo los articleID
-                aux.append(tupla[0])
+                aux.append(tupla)
             aux.sort()
             sharedArticlesIDList.append(aux)
         # Hacer el AND entre todos los articleID de cada término
@@ -812,7 +812,7 @@ class SAR_Indexer:
 
         # Obtengo el primer término y su posting por el que se hará el recorrido del algoritmo
         firstTerm = separedTerms.pop(0)
-        firstPosting = self.get_posting(firstTerm, field)
+        firstPosting = self.index[field][firstTerm]
         for firstTupla in firstPosting:
             # Si el articleID se encuentra en la lista de articlesID comunes
             if(firstTupla[0] in sharedArticlesID):
@@ -829,7 +829,7 @@ class SAR_Indexer:
                         if not(inAllTerms):
                             break
                         # Obtenemos la posting de los términos posteriores al primero y recorremos sus tuplas para encontrar aquella con articleID igual al que buscamos
-                        midPosting = self.get_posting(midTerm, field)
+                        midPosting = self.index[field][midTerm]
                         for midTupla in midPosting:
                             if firstTupla[0] == midTupla[0]:
                                 # Buscamos una ocurrencia de la posición, si no se encuentra salta una excepción y ponemos la variable inAllTerms a False, indicando que no se ha encontrado en todos los términos

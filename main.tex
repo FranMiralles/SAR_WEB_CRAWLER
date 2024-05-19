@@ -75,6 +75,18 @@ Grado en Ingeniería Informática
 
 \newpage
 
+\section{Introducción}
+
+\subsection{Coordinación de trabajo}
+Durante la ejecución del proyecto se ha podido mantener un seguimiento de versiones mediante la herramienta de control de versiones git, esto ha permitido trabajar de forma concurrente.
+
+Además, se ha realizado la mayoría del proyecto juntos en llamada mediante la aplicación de comunicación Discord, por lo que se ha mantenido una coordinación adecuada y se ha podido resolver dudas entre los métodos que realizaban los demás compañeros.
+
+\subsection{Dificultades encontradas}
+Afrontamos dificultades debido a la modularidad del proyecto, ya que inicialmente no teníamos una comprensión clara de las dependencias entre las diferentes partes. Esto complicó la distribución inicial del trabajo, ya que no sabíamos qué módulos iban a depender más de otros ni qué métodos podrían resultar más costosos en términos de carga de trabajo. La división de métodos consideramos que ha sido equitativa ya que en caso de que algunos compañeros hayan realizado mayor cantidad de métodos, estos no contienen la dificultad de otros.
+
+Además, encontramos dificultades al probar métodos como el parser, ya que la gran mayoría de entradas de Wikipedia se actualizaron después de que se realizara el crawling de ejemplo. Esto generó discrepancias entre los datos obtenidos durante el crawling y los datos actuales, lo que complicó la evaluación precisa de la funcionalidad del parser.
+
 \section{SAR\_Crawler\_Lib.py}
 
 El objetivo de esta sección es implementar un sistema de crawling para descargar artículos de Wikipedia y guardarlos en formato JSON. Este sistema permite iniciar el crawling desde una URL o archivo de URLs, procesar y estructurar el contenido de las páginas, y controlar la profundidad del crawling. Es fundamental para la indexación y consulta de artículos en la segunda parte del proyecto.
@@ -190,7 +202,7 @@ Después aplica el siguiente algoritmo: se utilizan dos pilas, una para operador
 \subsubsection{normalize\_query() - David}
 El objetivo del método \texttt{normalize\_query} es convertir la consulta en una lista compuesta de operadores y operandos. Primero, se recorre la consulta para separarla en palabras, a menos que se encuentren dentro de comillas dobles, indicando una consulta posicional, en cuyo caso los espacios dentro de las comillas no separan las palabras. Además, se asegura de que los paréntesis estén correctamente separados de los operandos en la consulta normalizada. Posteriormente, se recorre nuevamente la consulta ya normalizada para insertar operadores lógicos \textit{AND} entre los operandos cuando el usuario no los haya incluido explícitamente. Esto garantiza que la consulta esté estructurada de manera clara y que los operadores lógicos estén presentes donde sean necesarios.
 
-\subsubsection{evaluate()}
+\subsubsection{evaluate() - David}
 Método que se encarga de evaluar las operaciones con los operandos \textit{AND} y \textit{NOT}.
 
 \subsubsection{get\_posting() - Fran}
@@ -220,7 +232,7 @@ Una vez teniendo la lista de artículos comunes para todos los términos, se obt
 \subsubsection{get\_stemming() - Fran}
 Este método devuelve la \textit{posting list} relacionada con el término y campo en el diccionario \texttt{sindex}, que almacena los \textit{stemmings} de los términos.
 
-\subsubsection{get\_permuterm() - Fran}
+\subsubsection{get\_permuterm() - Roberto}
 El método recibe un término con un comodín \texttt{*} o \texttt{?} y el campo donde buscar.
 
 El primer paso es realizar la conversión a \textit{wild card query}, añadiendo un \texttt{\$} al final del término y permutando su posición hasta dejar el comodín a la izquierda.
@@ -269,7 +281,7 @@ Una vez procesados todos los artículos, se crea una lista de resultados combina
 
 Finalmente, se imprime el número total de resultados y se devuelve este número como salida del método.
 
-\subsubsection{Cálculo de Snippets}
+\subsubsection{Cálculo de Snippets - David y Carlos}
 Finalmente, vamos a exponer cómo hemos realizado el cálculo de \textit{snippets}, el cual se emplea en el método \texttt{solve\_and\_show()} si se ha activado la opción de mostrar \textit{snippets}.\\
 Para realizar el cálculo llamamos a la función \texttt{make\_snippet()} pasando un artículo, una lista de términos y un tamaño de ventana. Obtenemos una lista de las ocurrencias de los términos de la consulta y determinamos el inicio y el final del \textit{snippet} empleando la posición mínima y máxima de los índices anteriores, asegurándonos de que no exceda los límites del texto y que tenga el tamaño de ventana especificado (por defecto 50 unidades).
 

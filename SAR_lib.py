@@ -842,7 +842,8 @@ class SAR_Indexer:
                     if inAllTerms:
                         res.append((firstTupla[0], firstTupla[1][i]))
         
-
+        res = list(set(res))
+        res.sort()
         return res
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##

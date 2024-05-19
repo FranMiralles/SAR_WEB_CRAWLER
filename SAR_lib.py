@@ -1195,13 +1195,14 @@ class SAR_Indexer:
                             snippets.append(currentSnippet)
 
 
-        result = list(zip(indexed_urls, titles, solved, snippets))
+        result = list(zip(indexed_urls, titles, solved))
 
         if(self.show_snippet):
             print('========================================')
             i = 1
-            for url, title, art_ID, snippet in result:
-                print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n {snippet}\n")
+            for url, title, art_ID in result:
+                print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n")
+                print(f"{snippets[i-1]}\n")
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")

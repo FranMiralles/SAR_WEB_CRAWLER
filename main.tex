@@ -254,7 +254,15 @@ Con este funcionamiento, se representa la eliminación de los elementos de una l
 
 \subsection{Parte 2.2: Mostrar resultados}
 \subsubsection{solve\_and\_show()}
+El método \texttt{solve\_and\_show} se encarga de resolver una consulta y mostrar los resultados junto con el número de artículos recuperados. A continuación, se describen los pasos y componentes clave del método:
 
+Primero, se resuelve la consulta utilizando el método \texttt{solve\_query}, lo que devuelve una lista de IDs de artículos que coinciden con la consulta. Luego, se inicializan tres listas: \texttt{indexed\_urls} para almacenar las URLs de los artículos, \texttt{titles} para almacenar los títulos, y \texttt{snippets} para almacenar fragmentos de texto relevantes si la opción de mostrar snippets está habilitada.
+
+Para cada ID de artículo en la lista de resultados, se obtiene el \texttt{docID} y la URL correspondiente. Se añade la URL a la lista \texttt{indexed\_urls}. Luego, se abre el archivo correspondiente al \texttt{docID} y se lee línea por línea. Si se encuentra un artículo cuya URL coincide, se añade su título a la lista \texttt{titles} y, si la opción de mostrar snippets está habilitada, se genera un snippet del contenido del artículo y se añade a la lista \texttt{snippets}.
+
+Una vez procesados todos los artículos, se crea una lista de resultados combinando las URLs, los títulos y los IDs de los artículos. Si la opción de mostrar snippets está habilitada, se imprime cada resultado con su URL, título y snippet correspondiente. De lo contrario, se imprime solo la URL y el título de cada artículo, deteniéndose después de 10 resultados si la opción \texttt{show\_all} no está habilitada.
+
+Finalmente, se imprime el número total de resultados y se devuelve este número como salida del método.
 
 \subsubsection{Cálculo de Snippets}
 Finalmente vamos a exponer como hemos realizado el cálculo de \textit{snippets}, el cual se emplea en el método \textbf{solve\_and\_show() } si se ha activado la opción de mostrar \textit{snippets}.\\

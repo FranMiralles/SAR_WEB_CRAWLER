@@ -130,13 +130,11 @@ Ejemplo: Contenido de self.sindex['all']['program'] tras la indexación de la ca
 
 
 \subsubsection{make\_permuterm()}
-A la hora de crear el índice de \textit{permuterms} para los términos de todos los índices debemos de iterar por todos los campos indexados (depende de la opción multifield) y calcular el índice de permuterms del término con las rotaciones de cada subcadena con el símbolo '\$' de la forma vista en teoría. Deberemos almacenar el término generados por su permuterm en self.ptindex.
+A la hora de crear el índice de \textit{permuterms} para los términos de todos los índices debemos de iterar por todos los campos indexados (depende de la opción multifield) y calcular el índice de permuterms del término con las rotaciones de cada subcadena con el símbolo '\$' de la forma vista en teoría. Hemos decidido emplear una función llamada "generate\_permuterms()" para externalizar el propio cálculo del permuterm. Deberemos almacenar el término generado por su permuterm en self.ptindex.
 
 Ejemplo: Contenido de self.ptindex['all']['sa\$ca'] tras la indexación de la carpeta '200' (de sus ficheros):
 \newline
 casa
-
-
 
 \subsubsection{show\_stats()}
 Para este apartado debemos mostrar la longitud de los distintos diccionarios generados durante el proceso de indexación, así como el número de archivos y artículos indexados. Debe tener este formato:

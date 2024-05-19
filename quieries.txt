@@ -1,0 +1,13 @@
+casa
+cesa
+cisa
+cosa
+cusa
+casa OR cesa OR cisa OR cosa OR cusa
+c?sa
+c*sa
+c*sa AND c?sa
+c*sa OR c?sa
+c*sa AND NOT c?sa
+ma?a AND NOT mata
+bar*na OR val*cia OR pa*s

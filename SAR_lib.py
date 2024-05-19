@@ -487,7 +487,7 @@ class SAR_Indexer:
 
         print("========================================")
 
-        print(self.index['all']['fin'])
+        print(self.index['all']['base'])
         
         #for article in self.articles:
         #    print(self.articles[article])

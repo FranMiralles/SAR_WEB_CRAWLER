@@ -762,7 +762,7 @@ class SAR_Indexer:
         elif term in self.index[field]:
             res = self.index[field][term]
 
-        return res
+        return res.sort()
 
 
 
@@ -849,7 +849,7 @@ class SAR_Indexer:
         return: posting list
 
         """
-
+        # COMPLETADO
         ####################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
         ####################################################

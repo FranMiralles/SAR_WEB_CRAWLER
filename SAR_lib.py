@@ -573,6 +573,7 @@ class SAR_Indexer:
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
                 if operator_stack and operator_stack[-1] == '(':
                     operator_stack.pop()
+                    # Procesar el operador NOT si precede a la subexpresión
                     if operator_stack and operator_stack[-1] == 'NOT':
                         operator = operator_stack.pop()
                         operand = operand_stack.pop()
@@ -663,9 +664,9 @@ class SAR_Indexer:
                 # Si encontramos una comilla de apertura
                 opened_quotes = True
             elif character == '"' and opened_quotes:
-                # Si encontramos una comilla de cierre
+                # Si encontramos una comilla de cierre agregar al expresión
                 opened_quotes = False
-                if current_word:  # Agregar la palabra actual si no está vacía
+                if current_word: 
                     result.append(current_word)
                     current_word = ''
             elif character == ' ' and opened_quotes:
@@ -673,12 +674,12 @@ class SAR_Indexer:
                 current_word += character
             elif character == ' ' and not opened_quotes:
                 # Agregar la palabra actual si no estamos dentro de comillas
-                if current_word:  # Agregar la palabra actual si no está vacía
+                if current_word:
                     result.append(current_word)
                     current_word = ''
             elif character == '(' or character == ')':
                 # Si encontramos un paréntesis, agregar la palabra actual y el paréntesis
-                if current_word:  # Agregar la palabra actual si no está vacía
+                if current_word:
                     result.append(current_word)
                     current_word = ''
                 result.append(character)

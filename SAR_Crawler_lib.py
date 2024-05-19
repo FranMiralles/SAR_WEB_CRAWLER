@@ -132,7 +132,7 @@ class SAR_Wiki_Crawler:
         return None
 
 
-    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str,List]]]:
+    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]:
         """Devuelve una estructura tipo artÃ­culo a partir del text en crudo
 
         Args:
@@ -154,63 +154,89 @@ class SAR_Wiki_Crawler:
             en caso de no encontrar tÃ­tulo o resÃºmen del artÃ­culo, devolverÃ¡ None
 
         """
-        def clean_text(txt):
-            return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
         
-        for match in self.title_sum_re.finditer(text):
-            title = match.group("title")
-            summary = match.group("summary")
-            rest = match.group("rest")
+        def clean_text(txt: str) -> str:
+            return '\n'.join(line for line in txt.split('\n') if line.strip())
 
-            document = {
-                "url": url,
-                "title": title,
-                "summary": summary,
-                "sections": []
-            }
+        # Intentamos extraer el título y el resumen del texto.
+        match = self.title_sum_re.match(text)
+        if not match:
+            return None  # Si no encontramos título ni resumen, devolvemos None.
 
-            # Secciones
-            for section_match in self.sections_re.finditer(rest):
-                section = section_match.group(0)
-                section_match = self.section_re.match(section)
+        # Extraemos el título, el resumen y el resto del texto.
+        title = match.group("title")
+        summary = clean_text(match.group("summary"))
+        rest = match.group("rest")
 
-                if section_match is not None:
-                    section_name = section_match.group("name")
-                    section_text = clean_text(section_match.group("text"))
-                    section_rest = section_match.group("rest")
+        # Inicializamos el diccionario del documento con el URL, título y resumen.
+        document = {
+            "url": url,
+            "title": title,
+            "summary": summary,
+            "sections": []
+        }
 
-                    section_dict = {
-                        "name": section_name,
-                        "text": section_text,
-                        "subsections": []
-                    }
+        # Extraemos las secciones del resto del texto.
+        section_matches = list(self.sections_re.finditer(rest))
+        for i in range(len(section_matches)):
+            section_start = section_matches[i].start()
+            
+            # Determinamos el inicio de la próxima sección o el final del texto.
+            if i + 1 < len(section_matches):
+                next_section_start = section_matches[i + 1].start()
+            else:
+                next_section_start = len(rest)
+            
+            # Obtenemos el texto de la sección actual.
+            section_text = rest[section_start:next_section_start]
+            sec_match = self.section_re.match(section_text)
 
-                    # Subsecciones
-                    for subsection_match in self.subsections_re.finditer(section_rest):
-                        subsection = subsection_match.group(0)
-                        subsection_match = self.subsection_re.match(subsection)
+            if sec_match:
+                # Extraemos el nombre y el contenido de la sección.
+                section_name = sec_match.group("name")
+                section_content = sec_match.group("text")
+                section_rest = sec_match.group("rest")
 
-                        if subsection_match is not None:
-                            subsection_name = subsection_match.group("name")
-                            subsection_text = clean_text(subsection_match.group("text"))
+                # Creamos el diccionario de la sección.
+                section_dict = {
+                    "name": section_name,
+                    "text": clean_text(section_content),
+                    "subsections": []
+                }
 
-                            subsection_dict = {
-                                "name": subsection_name,
-                                "text": subsection_text
-                            }
+                # Extraemos las subsecciones del contenido de la sección.
+                subsection_matches = list(self.subsections_re.finditer(section_rest))
+                for j in range(len(subsection_matches)):
+                    subsection_start = subsection_matches[j].start()
+                    
+                    # Determinamos el inicio de la próxima subsección o el final del texto de la sección.
+                    if j + 1 < len(subsection_matches):
+                        next_subsection_start = subsection_matches[j + 1].start()
+                    else:
+                        next_subsection_start = len(section_rest)
+                    
+                    # Obtenemos el texto de la subsección actual.
+                    subsection_text = section_rest[subsection_start:next_subsection_start]
+                    subsec_match = self.subsection_re.match(subsection_text)
 
-                            section_dict["subsections"].append(subsection_dict)
+                    if subsec_match:
+                        # Extraemos el nombre y el contenido de la subsección.
+                        subsection_name = subsec_match.group("name")
+                        subsection_content = subsec_match.group("text")
 
-                    document["sections"].append(section_dict)
+                        # Creamos el diccionario de la subsección.
+                        subsection_dict = {
+                            "name": subsection_name,
+                            "text": clean_text(subsection_content)
+                        }
 
-            return document
+                        # Añadimos la subsección al diccionario de la sección.
+                        section_dict["subsections"].append(subsection_dict)
 
-        document = None
-
-        # COMPLETAR
+                # Añadimos la sección al diccionario del documento.
+                document["sections"].append(section_dict)
 
         return document
-
 
 
     def save_documents(self,

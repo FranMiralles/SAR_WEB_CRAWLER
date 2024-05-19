@@ -796,12 +796,7 @@ class SAR_Indexer:
         sharedArticlesIDList = []
         for term in separedTerms:
             aux = []
-            try:
-                postingPositional = self.index[field][term]
-            except KeyError:
-                print(f"El término {term} no se encuentra en el campo {field}")
-                return []
-
+            postingPositional = self.get_posting(term, field)
             for tupla in postingPositional:
                 # Añado solo los articleID
                 aux.append(tupla)
@@ -816,7 +811,11 @@ class SAR_Indexer:
 
         # Obtengo el primer término y su posting por el que se hará el recorrido del algoritmo
         firstTerm = separedTerms.pop(0)
-        firstPosting = self.get_posting(firstTerm, field)
+        if firstTerm in self.index[field]:
+            firstPosting = self.index[field][firstTerm]
+        else:
+            firstPosting = []
+
         for firstTupla in firstPosting:
             # Si el articleID se encuentra en la lista de articlesID comunes
             if(firstTupla[0] in sharedArticlesID):
@@ -833,7 +832,10 @@ class SAR_Indexer:
                         if not(inAllTerms):
                             break
                         # Obtenemos la posting de los términos posteriores al primero y recorremos sus tuplas para encontrar aquella con articleID igual al que buscamos
-                        midPosting = self.get_posting(midTerm, field)
+                        if midTerm in self.index[field]:
+                            midPosting = self.index[field][midTerm]
+                        else:
+                            midPosting = []
                         for midTupla in midPosting:
                             if firstTupla[0] == midTupla[0]:
                                 # Buscamos una ocurrencia de la posición, si no se encuentra salta una excepción y ponemos la variable inAllTerms a False, indicando que no se ha encontrado en todos los términos
@@ -845,8 +847,7 @@ class SAR_Indexer:
                     if inAllTerms:
                         res.append((firstTupla[0], firstTupla[1][i]))
         
-        res = list(set(res))
-        res.sort()
+        print(res)
         return res
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##

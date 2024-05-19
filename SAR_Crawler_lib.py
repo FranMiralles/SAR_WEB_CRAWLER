@@ -133,11 +133,11 @@ class SAR_Wiki_Crawler:
 
 
     def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]:
-        """Devuelve una estructura tipo artÃ­culo a partir del text en crudo
+        """Devuelve una estructura tipo artículo a partir del text en crudo
 
         Args:
-            text (str): Texto en crudo del artÃ­culo de la Wikipedia
-            url (str): url del artÃ­culo, para aÃ±adirlo como un campo
+            text (str): Texto en crudo del artículo de la Wikipedia
+            url (str): url del artículo, para añadirlo como un campo
 
         Returns:
 
@@ -146,12 +146,12 @@ class SAR_Wiki_Crawler:
             devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
                 Los valores asociados a 'url', 'title' y 'summary' son cadenas,
                 el valor asociado a 'sections' es una lista de posibles secciones.
-                    Cada secciÃ³n es un diccionario con 'name', 'text' y 'subsections',
+                    Cada sección es un diccionario con 'name', 'text' y 'subsections',
                         los valores asociados a 'name' y 'text' son cadenas y,
                         el valor asociado a 'subsections' es una lista de posibles subsecciones
                         en forma de diccionario con 'name' y 'text'.
 
-            en caso de no encontrar tÃ­tulo o resÃºmen del artÃ­culo, devolverÃ¡ None
+            en caso de no encontrar título o resúmen del artículo, devolverá None
 
         """
         

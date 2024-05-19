@@ -487,14 +487,14 @@ class SAR_Indexer:
 
         print("========================================")
 
-        #print(self.index['all']['fin'])
+        print(self.index['all']['fin'])
         
         #for article in self.articles:
         #    print(self.articles[article])
 
         #Printear las posting lists
         #   print("fin")
-        print(self.index['all']['precisión'])
+        #   print(self.index['all']['fin'])
         #   print("semana")
         #   print(self.index['all']['semana'])
         #for term in self.index['all']:
@@ -936,7 +936,7 @@ class SAR_Indexer:
         while(len(postingsRelated) != 0):
             res = self.or_posting(res, postingsRelated.pop()) 
 
-        print(len(res))
+
         # self.ptindex
         return res
 
@@ -982,6 +982,10 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
+        p1 = list(set(p1))
+        p2 = list(set(p2))
+        p1.sort()
+        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -992,6 +996,7 @@ class SAR_Indexer:
                     p1.pop(0)
                 else:
                     p2.pop(0)
+
         return p3
 
 
@@ -1013,6 +1018,10 @@ class SAR_Indexer:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         p3:list = []
+        p1 = list(set(p1))
+        p2 = list(set(p2))
+        p1.sort()
+        p2.sort()
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] == p2[0]):
                 p3.append(p1[0])
@@ -1055,6 +1064,8 @@ class SAR_Indexer:
         print("p2")
         print(p2)
         p3:list = []
+        p2 = list(set(p2))
+        p2.sort()   
         while len(p1) != 0 and len(p2) != 0:
             if(p1[0] < p2[0]):
                 p3.append(p1[0])
@@ -1111,25 +1122,6 @@ class SAR_Indexer:
             else:
                 print(query)
         return not errors
-    
-    def make_snippet(self, text:str, terms:List[str], window:int=50) -> str:
-        """
-        Crea un snippet para un texto y una lista de términos.
-        
-        Args:
-            text (str): El texto del que se generará el snippet.
-            terms (List[str]): La lista de términos que deben aparecer en el snippet.
-            window (int): El tamaño de la ventana de texto alrededor de los términos.
-
-        Returns:
-            str: El snippet generado.
-        """
-        snippet = ''
-        for term in terms:
-            index = text.lower().find(term)
-            if index != -1:
-                snippet += '...' + text[index-window:index+window] + '...'
-        return snippet
 
 
     def solve_and_show(self, query:str): # ROBERTO
@@ -1144,6 +1136,8 @@ class SAR_Indexer:
 
         """
         solved = self.solve_query(query)
+        print(solved)
+
         indexed_urls = []
         titles = []
 
@@ -1156,16 +1150,25 @@ class SAR_Indexer:
                 for line in file:
                     j = self.parse_article(line) 
                     if j['url'] == url:
+
                         titles.append(j['title'])
 
-        result = list(zip(indexed_urls, titles, solved))
+        result = list(zip(indexed_urls, titles))
 
         print('========================================')
         i = 1
-        for url, title, art_ID in result:
-            print(f"#{i:02d} ({ art_ID}) {title}: {url}")
-            if not self.show_all and i == 10:
+        for url, title in result:
+            print(f"#{i:02d} ({'algo'}) {title}: {url}")
+            if False:
                 break
             i += 1
         print('========================================')
         print(f"Number of results: {len(result)}")
+
+
+
+
+
+
+        
+

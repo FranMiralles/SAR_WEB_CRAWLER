@@ -1128,6 +1128,32 @@ class SAR_Indexer:
             else:
                 print(query)
         return not errors
+    
+    def make_snippet(self, text:str, terms:List[str], window:int=50) -> str:
+        """
+        Crea un snippet para un texto y una lista de términos.
+        
+        Args:
+            text (str): El texto del que se generará el snippet.
+            terms (List[str]): La lista de términos que deben aparecer en el snippet.
+            window (int): El tamaño de la ventana de texto alrededor de los términos.
+
+        Returns:
+            str: El snippet generado.
+        """
+        snippet = ''
+        positions = []
+        for term in terms:
+            index = text.lower().find(term)
+            if index != -1:
+                positions.append(index)
+                positions.append(index + len(term) - 1)
+        if positions:
+            start = max(0, min(positions) - window)
+            end = min(len(text), max(positions) + window + 1)
+            snippet = '...' + text[start:end] + '...'
+
+        return snippet
 
 
     def solve_and_show(self, query:str): # ROBERTO
@@ -1146,6 +1172,7 @@ class SAR_Indexer:
 
         indexed_urls = []
         titles = []
+        snippets = []
 
         for art_id in solved:
             docID = self.articles[art_id]['doc_id']
@@ -1157,24 +1184,37 @@ class SAR_Indexer:
                     j = self.parse_article(line) 
                     if j['url'] == url:
 
+                        #Una vez encontrado el artículo, añadir el título
                         titles.append(j['title'])
 
-        result = list(zip(indexed_urls, titles))
-
-        print('========================================')
-        i = 1
-        for url, title in result:
-            print(f"#{i:02d} ({'algo'}) {title}: {url}")
-            if False:
-                break
-            i += 1
-        print('========================================')
-        print(f"Number of results: {len(result)}")
+                        if(self.show_snippet):
+                            #Mostrar el snippet
+                            currentSnippet = self.make_snippet(j['all'], query.split())
+                            snippets.append(currentSnippet)
 
 
+        result = list(zip(indexed_urls, titles, solved, snippets))
+
+        if(self.show_snippet):
+            print('========================================')
+            i = 1
+            for url, title, art_ID, snippet in result:
+                print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n {snippet}\n")
+                i += 1
+            print('========================================')
+            print(f"Number of results: {len(result)}")
+
+        else:
+
+            print('========================================')
+            i = 1
+            for url, title, art_ID in result:
+                print(f"# {i:02d} ({ art_ID}) {title}: {url}\n")
+                if not self.show_all and i == 10:
+                    break
+                i += 1
+            print('========================================')
+            print(f"Number of results: {len(result)}")
 
 
-
-
-        
-
+            

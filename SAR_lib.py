@@ -257,7 +257,7 @@ class SAR_Indexer:
                     print(f"Article {j['url']} already indexed")
                     continue
 
-                # Tokenizar el contenido del artículo
+                # Contenido del artículo
                 content = j['all']
                 #print(f"Indexing {j['title']} with {len(tokens)} tokens")
 
@@ -487,7 +487,7 @@ class SAR_Indexer:
 
         print("========================================")
 
-        print(self.index['all']['base'])
+        #print(self.ptindex['all']['sa$ca'])
         
         #for article in self.articles:
         #    print(self.articles[article])
@@ -1144,12 +1144,15 @@ class SAR_Indexer:
         """
         snippet = ''
         positions = []
+        # Buscar las posiciones de los términos en el texto, lo pasa a minúsculas para que no sea case sensitive
         for term in terms:
-            index = text.lower().find(term)
+            index = text.lower().find(term.lower())
             if index != -1:
+                # Añadir las posiciones de inicio y fin de los términos
                 positions.append(index)
                 positions.append(index + len(term) - 1)
         if positions:
+            # Calcular la ventana de texto alrededor de los términos
             start = max(0, min(positions) - window)
             end = min(len(text), max(positions) + window + 1)
             snippet = '...' + text[start:end] + '...'
@@ -1199,7 +1202,7 @@ class SAR_Indexer:
             i = 1
             for url, title, art_ID in result:
                 print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n")
-                print(f"snippets[i-1]\n")
+                print(f"{snippets[i-1]}\n")
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")

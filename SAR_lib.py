@@ -195,7 +195,7 @@ class SAR_Indexer:
         ##########################################
 
         #
-        if self.stemming:
+        if self.use_stemming:
             self.make_stemming()
         if self.permuterm:
             self.make_permuterm()
@@ -1126,9 +1126,11 @@ class SAR_Indexer:
                     print(f'{query}\t{result}')
                 else:
                     print(f'>>>>{query}\t{reference} != {result}<<<<')
-                    errors = True                    
+                    errors = True
+
             else:
-                print(query)
+                print(line)
+
         return not errors
     
     def make_snippet(self, text:str, terms:List[str], window:int=50) -> str:

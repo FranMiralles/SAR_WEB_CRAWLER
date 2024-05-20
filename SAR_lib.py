@@ -195,7 +195,7 @@ class SAR_Indexer:
         ##########################################
 
         #
-        if self.use_stemming:
+        if self.stemming:
             self.make_stemming()
         if self.permuterm:
             self.make_permuterm()
@@ -1219,5 +1219,5 @@ class SAR_Indexer:
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")
-        print(self.index['all']['fin'])
+        
 

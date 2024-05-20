@@ -805,7 +805,10 @@ class SAR_Indexer:
         sharedArticlesIDList = []
         for term in separedTerms:
             aux = []
-            postingPositional = [x[0] for x in self.index[field][term]]
+            try:
+                postingPositional = [x[0] for x in self.index[field][term]]
+            except KeyError:
+                postingPositional = []  
             for tupla in postingPositional:
                 # Añado solo los articleID
                 aux.append(tupla)
@@ -894,8 +897,8 @@ class SAR_Indexer:
         postingsRelated = []
         while(len(keysRelated) != 0):
             key = keysRelated.pop(0)
-            postingsRelated.append(self.index[field][key])
-
+            if key in self.index[field]:
+                postingsRelated.append(self.index[field][key])
         if len(postingsRelated) == 0:
             return res
         

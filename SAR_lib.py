@@ -159,7 +159,7 @@ class SAR_Indexer:
         return article['url'] in self.urls
 
 
-    def index_dir(self, root:str, **args): # alguien
+    def index_dir(self, root:str, **args): # DAVID
         """
         
         Recorre recursivamente el directorio o fichero "root" 
@@ -253,11 +253,11 @@ class SAR_Indexer:
             for line in file:
                 j = self.parse_article(line)  # Parsear el artículo
 
-                if self.already_in_index(j):  # Verificar si el artículo ya está indexado
+                if self.already_in_index(j):  # Verificar si el artículo ya está indexado para no volver a indexar
                     print(f"Article {j['url']} already indexed")
                     continue
 
-                # Tokenizar el contenido del artículo
+                # Contenido del artículo
                 content = j['all']
                 #print(f"Indexing {j['title']} with {len(tokens)} tokens")
 
@@ -266,9 +266,9 @@ class SAR_Indexer:
                 self.articles[articleId] = {'doc_id': docId, 'url': j['url']}
 
                 # Indexar los tokens
-                if self.positional:
+                if self.positional: #Si es positional
                         
-                    if self.multifield:
+                    if self.multifield: #Si es multifield
                         for field, tokenize in self.fields:
                                     if field not in self.index:
                                         self.index[field] = {}
@@ -292,7 +292,7 @@ class SAR_Indexer:
                                             self.index[field][url] = [(articleId, [0])]
                                         else: self.index[field][url].append((articleId, 0))
 
-                    else:   
+                    else: #Si no es multifield
                         tokens = self.tokenize(content)
                         for i, token in enumerate(tokens):
                             if token not in self.index['all']: #Nueva entrada en el índice
@@ -304,7 +304,7 @@ class SAR_Indexer:
                                     self.index['all'][token].append((articleId, [i]))
                                 else:
                                     self.index['all'][token][-1][1].append(i)
-                else:
+                else: #Si no es positional
                     if self.multifield:
                         for field, tokenize in self.fields:
                                     if field not in self.index:
@@ -322,7 +322,7 @@ class SAR_Indexer:
                                                     self.index[field][token].append(articleId)
 
                                     else :
-                                        url = content
+                                        url = content #Es el caso de url, se indexa como una palabra
                                         if url not in self.index[field]:
                                             self.index[field][url] = [articleId]
                                         else: self.index[field][url].append(articleId)
@@ -412,16 +412,16 @@ class SAR_Indexer:
         self.ptindex = {}
 
         # For multifield
-        if self.multifield:
-            for field, tokenize in self.fields:
+        if self.multifield: #Si es multifield
+            for field, _ in self.fields:
                     if field not in self.ptindex:
                         self.ptindex[field] = {}
                     for term in self.index[field]:
-                        permuted_terms = self.generate_permuterms(term)
+                        permuted_terms = self.generate_permuterms(term) #Generar los permuterms del termino
                         for perm in permuted_terms:
                             if perm not in self.ptindex[field]:
                                 self.ptindex[field][perm] = term
-        else:
+        else: #Si no es multifield
             if 'all' not in self.ptindex:
                 self.ptindex['all'] = {}
             for term in self.index['all']:
@@ -487,8 +487,7 @@ class SAR_Indexer:
 
         print("========================================")
 
-        print(self.sindex['all']['cas'])
-        print(self.index['all']['casas'])
+        #print(self.ptindex['all']['sa$ca'])
         
         #for article in self.articles:
         #    print(self.articles[article])
@@ -574,6 +573,7 @@ class SAR_Indexer:
                 # Eliminar el '(' de la pila de operadores al haber resuelto la subexpresión
                 if operator_stack and operator_stack[-1] == '(':
                     operator_stack.pop()
+                    # Procesar el operador NOT si precede a la subexpresión
                     if operator_stack and operator_stack[-1] == 'NOT':
                         operator = operator_stack.pop()
                         operand = operand_stack.pop()
@@ -664,9 +664,9 @@ class SAR_Indexer:
                 # Si encontramos una comilla de apertura
                 opened_quotes = True
             elif character == '"' and opened_quotes:
-                # Si encontramos una comilla de cierre
+                # Si encontramos una comilla de cierre agregar al expresión
                 opened_quotes = False
-                if current_word:  # Agregar la palabra actual si no está vacía
+                if current_word: 
                     result.append(current_word)
                     current_word = ''
             elif character == ' ' and opened_quotes:
@@ -674,12 +674,12 @@ class SAR_Indexer:
                 current_word += character
             elif character == ' ' and not opened_quotes:
                 # Agregar la palabra actual si no estamos dentro de comillas
-                if current_word:  # Agregar la palabra actual si no está vacía
+                if current_word:
                     result.append(current_word)
                     current_word = ''
             elif character == '(' or character == ')':
                 # Si encontramos un paréntesis, agregar la palabra actual y el paréntesis
-                if current_word:  # Agregar la palabra actual si no está vacía
+                if current_word:
                     result.append(current_word)
                     current_word = ''
                 result.append(character)
@@ -913,13 +913,15 @@ class SAR_Indexer:
 
     def get_permuterm(self, term: str, field: Optional[str] = None):  # ROBERTO
         """
-        Devuelve la lista de postings asociada a un término utilizando el índice permuterm.
-        NECESARIO PARA LA AMPLIACIÓN DE PERMUTERM
 
-        param:  "term": término para recuperar la lista de postings, "term" incluye un comodín (* o ?).
-                "field": campo sobre el que se debe recuperar la lista de postings, solo necesario si se hace la ampliación de múltiples índices.
+        Devuelve la posting list asociada a un termino utilizando el indice permuterm.
+        NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
-        return: lista de postings
+        param:  "term": termino para recuperar la posting list, "term" incluye un comodin (* o ?).
+                "field": campo sobre el que se debe recuperar la posting list, solo necesario se se hace la ampliacion de multiples indices
+
+        return: posting list
+
         """
         
         #####################
@@ -930,21 +932,26 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
 
-        
         res = []
         pterm = term + "$"
+
+        # Movemos el comodín al final, rotando el término
         while pterm[len(pterm)-1] != '*' and pterm[len(pterm)-1] != '?':
             pterm = pterm[1:] + pterm[0]
 
+        # Obtenemos las claves del índice permuterm
         keys = list(self.ptindex[field].keys())
 
         keysRelated = []
+        # Si el comodín es '*', buscamos todas las claves que empiecen por el término
         if pterm[-1] == '*':
             pterm = pterm[:-1]
             for key in keys:
                 if key.startswith(pterm):
                     keysRelated.append(key)
             pass
+        # Si el comodín es '?', buscamos todas las claves que empiecen por el término 
+        # y tengan una longitud de una unidad superior
         elif pterm[-1] == '?':
             pterm = pterm[:-1]
             for key in keys:
@@ -957,18 +964,19 @@ class SAR_Indexer:
         
         postingsRelated = []
         while(len(keysRelated) != 0):
+            # Obtenemos la posting list de cada clave relacionada
             key = self.ptindex[field][keysRelated.pop()]
+            # Añadimos la posting list a la lista de posting lists
             postingsRelated.append(self.get_posting(key, field))
 
         if len(postingsRelated) == 0:
             return res
 
+        # Realizamos un OR entre todas las posting lists
         res = postingsRelated.pop(0)
         while(len(postingsRelated) != 0):
             res = self.or_posting(res, postingsRelated.pop()) 
 
-
-        # self.ptindex
         return res
 
 
@@ -1147,9 +1155,11 @@ class SAR_Indexer:
                     print(f'{query}\t{result}')
                 else:
                     print(f'>>>>{query}\t{reference} != {result}<<<<')
-                    errors = True                    
+                    errors = True
+
             else:
-                print(query)
+                print(line)
+
         return not errors
     
     def make_snippet(self, text:str, terms:List[str], window:int=50) -> str:
@@ -1166,12 +1176,15 @@ class SAR_Indexer:
         """
         snippet = ''
         positions = []
+        # Buscar las posiciones de los términos en el texto, lo pasa a minúsculas para que no sea case sensitive
         for term in terms:
-            index = text.lower().find(term)
+            index = text.lower().find(term.lower())
             if index != -1:
+                # Añadir las posiciones de inicio y fin de los términos
                 positions.append(index)
                 positions.append(index + len(term) - 1)
         if positions:
+            # Calcular la ventana de texto alrededor de los términos
             start = max(0, min(positions) - window)
             end = min(len(text), max(positions) + window + 1)
             snippet = '...' + text[start:end] + '...'
@@ -1221,7 +1234,7 @@ class SAR_Indexer:
             i = 1
             for url, title, art_ID in result:
                 print(f"# {i:02d} ({ art_ID}) \n {url}\n{title}: \n")
-                print(f"snippets[i-1]\n")
+                print(f"{snippets[i-1]}\n")
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")
@@ -1235,6 +1248,5 @@ class SAR_Indexer:
                 i += 1
             print('========================================')
             print(f"Number of results: {len(result)}")
-        print(self.index['all']['fin'])
-
+        
 

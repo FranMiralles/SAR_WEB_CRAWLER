@@ -487,7 +487,8 @@ class SAR_Indexer:
 
         print("========================================")
 
-        print(self.index['all']['base'])
+        print(self.sindex['all']['cas'])
+        print(self.index['all']['casas'])
         
         #for article in self.articles:
         #    print(self.articles[article])
@@ -874,10 +875,40 @@ class SAR_Indexer:
         # Devuelve el steam del término
         stem = self.stemmer.stem(term)
         res = []
-        # Si se encuentra en el índice, devolver la posting list asociada
-        if (stem in self.sindex[field]):
-            res = self.sindex[field][stem]
+        keysRelated = []
 
+        # Si se encuentra en el índice, devolver la lista de términos relacionados con el stem
+        if (stem in self.sindex[field]):
+            keysRelated = self.sindex[field][stem]
+
+        # Hacemos una copia de keysRelated para no dañar la lista en memoria del diccionario
+        keysRelated = keysRelated.copy()
+
+        if len(keysRelated) == 0:
+            return res
+        
+        # Obtenemos todas las listas de postingsLists y la almacenamos en una lista postingsRelated
+        postingsRelated = []
+        while(len(keysRelated) != 0):
+            key = keysRelated.pop(0)
+            postingsRelated.append(self.index[field][key])
+
+        if len(postingsRelated) == 0:
+            return res
+        
+        # Devolvemos el OR de todas las postings, eliminando las posiciones en caso de que se haya indexado de manera posicional
+        res = []
+        for list in postingsRelated:
+            postingsNormalized = []
+            for element in list:
+                if isinstance(element, tuple):
+                    postingsNormalized.append(element[0])
+                else:
+                    postingsNormalized.append(element)
+            if(len(res) != 0): 
+                res = self.or_posting(postingsNormalized, res)
+            else:
+                res =  postingsNormalized
         return res
 
     def get_permuterm(self, term: str, field: Optional[str] = None):  # ROBERTO
@@ -1041,7 +1072,6 @@ class SAR_Indexer:
         while len(p2) != 0:
             p3.append(p2[0])
             p2.pop(0)
-
         return p3
 
 

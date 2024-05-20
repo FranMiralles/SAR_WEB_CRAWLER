@@ -413,7 +413,7 @@ class SAR_Indexer:
 
         # For multifield
         if self.multifield: #Si es multifield
-            for field, tokenize in self.fields:
+            for field, _ in self.fields:
                     if field not in self.ptindex:
                         self.ptindex[field] = {}
                     for term in self.index[field]:

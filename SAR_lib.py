@@ -658,6 +658,7 @@ class SAR_Indexer:
         result = []  # Lista para almacenar los resultados
         opened_quotes = False  # Bandera para indicar si estamos dentro de comillas
         operators = {"OR", "AND", "NOT", "(", ")"}  # Conjunto de operadores lógicos y paréntesis
+        space = False
 
         for character in query:
             if character == '"' and not opened_quotes:
@@ -667,10 +668,15 @@ class SAR_Indexer:
                 # Si encontramos una comilla de cierre agregar al expresión
                 opened_quotes = False
                 if current_word: 
-                    result.append(current_word)
+                    if not space:
+                        result.append(current_word+' ') 
+                        space = False
+                    else:
+                        result.append(current_word)
                     current_word = ''
             elif character == ' ' and opened_quotes:
                 # Agregar espacios dentro de comillas a la palabra actual
+                space = True
                 current_word += character
             elif character == ' ' and not opened_quotes:
                 # Agregar la palabra actual si no estamos dentro de comillas
@@ -792,13 +798,14 @@ class SAR_Indexer:
         """
 
         res = []
+        terms = terms.strip()
         separedTerms = terms.split(" ")
 
         # Obtener para cada termino sus articlesID en una lista, luego hacer AND para obtener solo los articlesID que aparecen en todos los terminos, esto lo hago para agilizar la computación posterior de comprobar para cada posición si los siguientes términos tienen una posición seguida
         sharedArticlesIDList = []
         for term in separedTerms:
             aux = []
-            postingPositional = self.get_posting(term, field)
+            postingPositional = [x[0] for x in self.index[field][term]]
             for tupla in postingPositional:
                 # Añado solo los articleID
                 aux.append(tupla)
@@ -848,11 +855,7 @@ class SAR_Indexer:
                     # Si se ha encontrado para todos los términos, se añade al resultado el articleID y la posición del primer término del sintagma en el artículo
                     if inAllTerms:
                         res.append((firstTupla[0], firstTupla[1][i]))
-        
         return res
-        ########################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
-        ########################################################
 
 
     def get_stemming(self, term:str, field: Optional[str]=None): # FRAN
@@ -909,6 +912,7 @@ class SAR_Indexer:
                 res = self.or_posting(postingsNormalized, res)
             else:
                 res =  postingsNormalized
+
         return res
 
     def get_permuterm(self, term: str, field: Optional[str] = None):  # ROBERTO
@@ -967,7 +971,7 @@ class SAR_Indexer:
             # Obtenemos la posting list de cada clave relacionada
             key = self.ptindex[field][keysRelated.pop()]
             # Añadimos la posting list a la lista de posting lists
-            postingsRelated.append(self.get_posting(key, field))
+            postingsRelated.append([x[0] for x in self.index[field][key]])
 
         if len(postingsRelated) == 0:
             return res

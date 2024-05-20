@@ -235,15 +235,25 @@ Este método devuelve la \textit{posting list} relacionada con el término y cam
 \subsubsection{get\_permuterm() - Roberto}
 El método recibe un término con un comodín \texttt{*} o \texttt{?} y el campo donde buscar.
 
-El primer paso es realizar la conversión a \textit{wild card query}, añadiendo un \texttt{\$} al final del término y permutando su posición hasta dejar el comodín a la izquierda.
+El primer paso es realizar la conversión a \textit{wild card query}, añadiendo un \texttt{\$} al final del término y permutando su posición hasta dejar el comodín a la derecha.
 
 Una vez realizado, se obtienen todas las claves del índice permuterm \texttt{ptindex} y se hace matching de cada clave con el término teniendo en cuenta que:
 \begin{itemize}
-  \item Si el comodín es \texttt{*}, el matching se realiza si la clave contiene como prefijo al término.
-  \item Si el comodín es \texttt{?}, el matching se realiza si la clave contiene como prefijo al término y el sufijo que queda es un único término, ya que el comodín \texttt{?} únicamente sustituye a un carácter.
+  \item Si el comodín es \texttt{*}, el matching se realiza si la clave contiene como prefijo al término dado.
+  \item Si el comodín es '?', el matching se realiza en todas las claves que empiecen por el término dado y tengan una longitud de una unidad superior.
 \end{itemize}
 
-Una vez se tienen todas las claves que hacen matching, se encuentran las palabras relacionadas con las \textit{postings lists} obteniendo el valor de la clave de \texttt{ptindex} con las claves. Por último, se realiza el \textit{AND} de todas las \textit{postings lists} y se devuelve.
+Una vez se tienen todas las claves que hacen matching, se encuentran las palabras relacionadas con las \textit{postings lists} obteniendo el valor de la clave de \texttt{ptindex} con las claves. Por último, se realiza el \textit{OR} de todas las \textit{postings lists} y se devuelve.
+
+Ejemplo: Para una búsqueda con comodín, como \texttt{ca*}, se realiza el siguiente proceso:
+\begin{itemize}
+  \item Convertir \texttt{ca*} a una \textit{wild card query}, añadiendo \texttt{\$} al final: \texttt{ca*\$}.
+  \item Generar permutaciones hasta tener el comodín a la derecha: \texttt{ca*\$} -> \texttt{\$ca*}.
+  \item Buscar en el índice permuterm las claves que comiencen con \texttt{\$ca}.
+\end{itemize}
+
+Si el comodín fuera \texttt{ca?}, se buscarían claves que comiencen con \texttt{\$ca} y tengan un carácter adicional después de \texttt{ca}.
+
 
 \subsubsection{reverse\_posting() - Fran}
 Como parámetros contiene una lista de artículos, la cual se quiere conseguir su negado respecto a todo el conjunto de artículos indexados.
@@ -282,7 +292,7 @@ Una vez procesados todos los artículos, se crea una lista de resultados combina
 Finalmente, se imprime el número total de resultados y se devuelve este número como salida del método.
 
 \subsubsection{Cálculo de Snippets - David y Carlos}
-Finalmente, vamos a exponer cómo hemos realizado el cálculo de \textit{snippets}, el cual se emplea en el método \texttt{solve\_and\_show()} si se ha activado la opción de mostrar \textit{snippets}.\\
-Para realizar el cálculo llamamos a la función \texttt{make\_snippet()} pasando un artículo, una lista de términos y un tamaño de ventana. Obtenemos una lista de las ocurrencias de los términos de la consulta y determinamos el inicio y el final del \textit{snippet} empleando la posición mínima y máxima de los índices anteriores, asegurándonos de que no exceda los límites del texto y que tenga el tamaño de ventana especificado (por defecto 50 unidades).
+Finalmente, vamos a exponer cómo hemos realizado el cálculo de \texttt{snippets}, el cual se emplea en el método \texttt{solve\_and\_show()} si se ha activado la opción de mostrar \texttt{snippets}.\\
+Para realizar el cálculo llamamos a la función \texttt{make\_snippet()} pasando un artículo, una lista de términos y un tamaño de ventana. Obtenemos una lista de las ocurrencias de los términos de la consulta y determinamos el inicio y el final del \texttt{snippet} empleando la posición mínima y máxima de los índices anteriores, asegurándonos de que no exceda los límites del texto y que tenga el tamaño de ventana especificado (por defecto 50 unidades).
 
 \end{document}

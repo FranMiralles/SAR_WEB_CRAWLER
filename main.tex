@@ -230,7 +230,9 @@ Para ello, se hace una primera búsqueda de los artículos comunes para todos lo
 Una vez teniendo la lista de artículos comunes para todos los términos, se obtiene la referencia de la \textit{posting list} del primer término y se recorre hasta encontrar un elemento cuyo artículo sea el mismo que alguno de la lista de artículos comunes. Al encontrar alguno, se hace una búsqueda a través de sus posiciones y se busca si los demás términos en el mismo artículo se encuentran en una posición sucesora. Aquellas iteraciones que acaben, que hayan recorrido todos los términos y hayan encontrado posición sucesora, almacenarán su artículo en el resultado a devolver.
 
 \subsubsection{get\_stemming() - Fran}
-Este método devuelve la \textit{posting list} relacionada con el término y campo en el diccionario \texttt{sindex}, que almacena los \textit{stemmings} de los términos.
+En este método, se obtiene el \textit{stem} asociado al término de entrada con un atributo \textit{stemmer} del \textit{Indexer}. Luego se obtienen los términos indexados con el diccionario \textit{sindex} a partir del \textit{stem} y el campo de entrada.
+
+Una vez obtenidos todos los términos, se hace una búsqueda de sus \textit{posting list} en el ídice \textit{index} dependiendo también del campo de entrada para dar funcionalidad al \textit{multifield}, acabando con la operación \textit{OR} de todas las listas obtenidas. De esta forma devolveremos todos los artículos en los que aparece el \textit{stem} del término de entrada.
 
 \subsubsection{get\_permuterm() - Roberto}
 El método recibe un término con un comodín \texttt{*} o \texttt{?} y el campo donde buscar.

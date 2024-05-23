@@ -13,4 +13,4 @@ max_depth_level = 4
 crawler = SAR_Crawler_lib.SAR_Wiki_Crawler()
 
 
-crawler.start_crawling(initial_urls, document_limit, base_filename, None, max_depth_level)
+crawler.start_crawling(initial_urls, document_limit, base_filename, 5, max_depth_level)

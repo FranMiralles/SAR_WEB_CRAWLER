@@ -385,7 +385,7 @@ class SAR_Indexer:
 
         #For multifield
         if self.multifield:
-            for field, tokenize in self.fields: #Iterar por 'all', 'title', 'summary', 'section-name', 'url'
+            for field, _ in self.fields: #Iterar por 'all', 'title', 'summary', 'section-name', 'url'
                     if field not in self.sindex: #Crear la entrada en el diccionario si no existe
                         self.sindex[field] = {}
                     for term in self.index[field]: #Para cada termino en el indice actual

@@ -132,7 +132,7 @@ class SAR_Wiki_Crawler:
         return None
 
 
-    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]:
+    def parse_wikipedia_textual_content(self, text: str, url: str) -> Optional[Dict[str, Union[str, List]]]: # ROBERTO
         """Devuelve una estructura tipo artículo a partir del text en crudo
 
         Args:

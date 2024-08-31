@@ -1,0 +1,40 @@
+.divCentralMenuInicio{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100vh;
+    padding-right: 10vw;
+}
+
+.divMenuInicio{
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Más espacio entre los botones */
+    background: url('../components/texture.jpg') no-repeat center center; /* Textura de madera */
+    background-size: cover; /* La textura cubre todo el div */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.buttonItemMenu{
+    width: 150px; /* Ajuste de tamaño según sea necesario */
+    padding: 10px 20px;
+    background-color: transparent; /* Sin color de fondo, para dejar visible la textura de madera */
+    border: none;
+    border-radius: 8px;
+    color: #fff5e1; /* Color crema, simulando escritura en madera */
+    font-family: 'Cedarville Cursive', cursive; /* Fuente con estilo manuscrito */
+    font-size: 18px;
+    text-shadow: 1px 1px 2px #3a3a3a; /* Sombra para dar profundidad */
+    cursor: pointer;
+    transition: transform 0.2s ease; /* Animación de pulsación */
+}
+
+.buttonItemMenu:hover{
+    transform: scale(1.05);
+}
+
+.buttonItemMenu:active{
+    transform: scale(0.95);
+}

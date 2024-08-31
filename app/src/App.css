@@ -1,0 +1,7 @@
+.app{
+  background-image: url("./components/ruta.png");
+  background-repeat: no-repeat;
+  width: 100vw;
+  height: 100vh;
+  background-size: 100% 100%;
+}

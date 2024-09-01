@@ -11,6 +11,7 @@ BASE_DIR = os.path.dirname(API_DIR)
 CRAWLER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'SAR_Crawler.py')
 INDEXER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'SAR_Indexer.py')
 SEARCHER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'SAR_Searcher.py')
+JSONS_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'json')
 
 
 app = Flask(__name__)
@@ -127,6 +128,33 @@ def searcher():
 
     result = subprocess.run(args, capture_output=True, text=True)
     return jsonify({'output': result.stdout, 'error': result.stderr})
+
+@app.route('/api/files', methods=['GET'])
+def get_files():
+    try:
+        files = os.listdir(JSONS_DIR)
+        return jsonify(files)
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/api/crawler/delete_file', methods=['POST'])
+def delete_file():
+    file_name = request.json.get('file_name')
+
+    if not file_name:
+        return jsonify({"error": "No file name provided"}), 400
+
+    file_path = os.path.join(JSONS_DIR, file_name)
+
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return jsonify({"message": f"File '{file_name}' deleted successfully"}), 200
+        else:
+            return jsonify({"error": f"File '{file_name}' not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

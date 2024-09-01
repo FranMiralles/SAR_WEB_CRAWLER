@@ -4,7 +4,7 @@ export const crawlData = async (batchSize, documentLimit, maxDepthLevel) => {
     const url = 'http://localhost:5000/api/crawler';
 
     let params = {
-        OUT_BASE_FILENAME: './CrawlerIndexerSearcher/json/crawled.json',
+        OUT_BASE_FILENAME: './CrawlerIndexerSearcher/json/crawl.json',
         INITIAL_URL: 'https://es.wikipedia.org/wiki/oric_1',
         BATCH_SIZE: batchSize,
         DOCUMENT_LIMIT: documentLimit,
@@ -50,7 +50,7 @@ export const searchData = async (query) => {
         index: './CrawlerIndexerSearcher/indexedData.bin',
         query: query,
     };
-    console.log(params)
+
     try {
         const response = await axios.get(url, { params });
         return response.data;
@@ -59,3 +59,27 @@ export const searchData = async (query) => {
         return "Error"
     }
 };
+
+export const getJSONFiles = async (setFiles) => {
+    const url = 'http://localhost:5000/api/files';
+
+    try {
+        const response = await axios.get(url, {  });
+        setFiles(response.data.sort())
+
+    } catch (error) {
+        setFiles("ERROR")
+    }
+}
+
+export const deleteJSONFile = async (file_name) => {
+    const url = 'http://localhost:5000/api/crawler/delete_file';
+
+    try {
+        const response = await axios.post(url, { file_name:file_name });
+        return response.data
+
+    } catch (error) {
+        return ["Error"]
+    }
+}

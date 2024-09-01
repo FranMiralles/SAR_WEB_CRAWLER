@@ -6,7 +6,7 @@ html, body {
 .App {
   display: flex;
   flex-direction: column;
-  height: 93vh; /* Ocupa toda la altura de la pantalla */
+  height: 93vh;
   padding: 20px 100px;
 }
 
@@ -24,7 +24,7 @@ html, body {
   margin: 0 5px;
   cursor: pointer;
   font-size: 16px;
-  width: 120px;
+  width: 145px;
   font-weight: bold;
   color: gray;
 }

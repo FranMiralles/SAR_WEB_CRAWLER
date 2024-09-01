@@ -1,60 +1,78 @@
 .divSearcher {
-    text-align: center;
-    padding: 20px;
-    height: 100%; /* Asegura que el div ocupe toda la altura de la ventana */
-    /*display: flex;
+    display: flex;
     flex-direction: column;
-    justify-content: space-between;*/
-  }
-  
-  .search-bar {
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.search-bar {
+    width: 100%;
+    max-width: 70%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .search-container {
+    
+}
+
+.search-container {
     position: relative;
-    width: 60%;
+    width: 100%;
     display: flex;
     align-items: center;
     background-color: white;
     border: 1px solid #ccc;
-    border-radius: 24px; /* Esquinas redondeadas */
-  }
-  
-  .search-input {
+    border-radius: 24px;
+}
+
+.search-input {
     width: 100%;
-    padding: 10px 40px 10px 20px; /* Espacio para el ícono */
+    padding: 10px 40px 10px 20px; 
     font-size: 18px;
     border: none;
-    border-radius: 24px; /* Esquinas redondeadas */
+    border-radius: 24px;
     outline: none;
     box-sizing: border-box;
-  }
-  
-  .search-icon-container {
+}
+
+.search-icon-container {
     display: flex;
     align-items: center;
     padding-right: 10px;
-  }
-  
-  .search-vr {
+}
+
+.search-vr {
     width: 1px;
     height: 24px;
     background-color: #ccc;
     margin-right: 10px;
-  }
+}
 
-  .search-hr {
+.search-hr {
     border: none;
     border-top: 1px solid #ccc;
-    width: 60%;
+    width: 100%;
+    max-width: 70%;
     margin: 20px auto;
-  }
-  
-  .search-button {
+}
+
+.help-button {
+    background-color: white;
+    width: 20px;
+    height: 20px;
+    background-image: url('https://cdn-icons-png.flaticon.com/128/189/189665.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+    outline: none;
+}
+
+.search-button {
     background-color: white;
     width: 20px;
     height: 20px;
@@ -64,19 +82,18 @@
     background-position: center;
     border: none;
     cursor: pointer;
-    margin-left: 10px;
     outline: none;
-  }
-  
-  .content-box {
-    width: 60%;
+}
+
+.content-box {
+    flex-grow: 1;
+    width: 100%;
+    max-width: 70%;
     margin: 0 auto;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    height: 100%;
     overflow-y: auto;
     text-align: left;
     box-sizing: border-box;
-  }
-  
+}

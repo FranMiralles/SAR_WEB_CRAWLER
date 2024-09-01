@@ -1,9 +1,10 @@
 import './App.css';
 import { MenuInicio } from './features/MenuInicio';
 import imagenCartel from "./components/rutacartel.png"
-import React, { useState } from 'react';
-import {crawlData, indexData, searchData} from "../src/services/apiService"
+import React, { useState, useEffect } from 'react';
+import { indexData } from "../src/services/apiService"
 import { Searcher } from './pages/Searcher';
+import { Crawler } from './pages/Crawler';
 
 
 // npm install axios
@@ -11,24 +12,18 @@ import { Searcher } from './pages/Searcher';
 function App() {
 
   const [text, setText] = useState("Contenido")
+  const [activeTab, setActiveTab] = useState("Crawler");
+  const [loading, setLoading] = useState(false)
 
-  const handleCrawler = async () =>{
-    var value = await crawlData(5, 50, 4);
-    console.log(value.error)
-    console.log(value.output)
-    setText(value.output)
-  }
+  useEffect(() => {
+    document.body.style.cursor = loading ? 'wait' : 'default';
+    return () => {
+      document.body.style.cursor = 'default';
+    };
+  }, [loading])
 
   const handleIndexer = async () =>{
     var value = await indexData(true);
-    console.log(value.error)
-    console.log(value.output)
-    setText(value.output)
-  }
-
-  const handleSearcher = async () =>{
-    console.log("BUSCANDO")
-    var value = await searchData("Europa es");
     console.log(value.error)
     console.log(value.output)
     setText(value.output)
@@ -44,18 +39,18 @@ function App() {
   };
   
 
-  const [activeTab, setActiveTab] = useState("Crawler");
+  
 
   const renderContent = () => {
     switch (activeTab) {
       case "Crawler":
-        return <label>CRAWLER CONTENT</label>;
+        return <Crawler loading={loading} setLoading={setLoading} />;
       case "Indexer":
         return <label>INDEXER CONTENT</label>;
       case "Searcher":
-        return <label>SEARCHER CONTENT</label>;
+        return <Searcher loading={loading} setLoading={setLoading} />;
       default:
-        return <label>CRAWLER CONTENT</label>;
+        return <></>;
     }
   };
 
@@ -65,20 +60,23 @@ function App() {
         <button
           className={activeTab === "Crawler" ? "active" : ""}
           onClick={() => setActiveTab("Crawler")}
+          disabled={loading}
         >
-          Crawler
+          CRAWLER
         </button>
         <button
           className={activeTab === "Indexer" ? "active" : ""}
           onClick={() => setActiveTab("Indexer")}
+          disabled={loading}
         >
-          Indexer
+          INDEXER
         </button>
         <button
           className={activeTab === "Searcher" ? "active" : ""}
           onClick={() => setActiveTab("Searcher")}
+          disabled={loading}
         >
-          Searcher
+          SEARCHER
         </button>
       </div>
       <div className="content">{renderContent()}</div>

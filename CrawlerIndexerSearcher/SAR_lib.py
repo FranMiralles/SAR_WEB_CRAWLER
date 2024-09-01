@@ -175,6 +175,9 @@ class SAR_Indexer:
         self.permuterm = args['permuterm']
 
         file_or_dir = Path(root)
+
+        print("ROOT")
+        print(root)
         
         if file_or_dir.is_file():
             # is a file

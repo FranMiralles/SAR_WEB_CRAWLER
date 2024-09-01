@@ -28,7 +28,7 @@ def holamundo():
     parametro1 = request.args.get('parametro1')
     parametro2 = request.args.get('parametro2')
 
-    args = ['python', os.path.join(API_DIR, 'holamundo.py')]
+    args = ['python3', os.path.join(API_DIR, 'holamundo.py')]
 
     if parametro1:
         args.append(parametro1)
@@ -48,7 +48,7 @@ def crawler():
     documentLimit = request.args.get('DOCUMENT_LIMIT')
     maxDepthLevel = request.args.get('MAX_DEPTH_LEVEL')
 
-    args = ['python', CRAWLER_DIR]
+    args = ['python3', CRAWLER_DIR]
 
     if outBaseFilename:
         args.append("--out-base-filename")
@@ -81,7 +81,7 @@ def indexer():
     multifield = request.args.get('multifield')
     positional = request.args.get('positional')
 
-    args = ['python', INDEXER_DIR]
+    args = ['python3', INDEXER_DIR]
 
     if dir:
         args.append(dir)
@@ -110,7 +110,7 @@ def searcher():
     all = request.args.get('all')
     query = request.args.get('query')
 
-    args = ['python', SEARCHER_DIR]
+    args = ['python3', SEARCHER_DIR]
 
     if index:
         args.append(index)
@@ -128,13 +128,6 @@ def searcher():
     result = subprocess.run(args, capture_output=True, text=True)
     return jsonify({'output': result.stdout, 'error': result.stderr})
 
-
-@app.route('/api/post', methods=['POST'])
-def post():
-    dato1 = request.args.get('dato1')
-    dato2 = request.args.get('dato2')
-    print(dato2)
-    return jsonify({'dato1': dato1})
 
 if __name__ == '__main__':
     app.run(port=5000)

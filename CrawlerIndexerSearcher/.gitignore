@@ -1,4 +1,2 @@
 
 *.pyc
-CrawlerIndexerSearcher/json/*.json
-CrawlerIndexerSearcher/*.bin

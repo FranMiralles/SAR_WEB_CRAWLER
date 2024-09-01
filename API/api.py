@@ -12,6 +12,7 @@ CRAWLER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'SAR_Crawler.py')
 INDEXER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'SAR_Indexer.py')
 SEARCHER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'SAR_Searcher.py')
 JSONS_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher', 'json')
+CRAWLERINDEXERSEARCHER_DIR = os.path.join(BASE_DIR, 'CrawlerIndexerSearcher')
 
 
 app = Flask(__name__)
@@ -155,6 +156,15 @@ def delete_file():
             return jsonify({"error": f"File '{file_name}' not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/indexer/check_bin_file', methods=['GET'])
+def check_bin_files():
+    bin_files = [f for f in os.listdir(CRAWLERINDEXERSEARCHER_DIR) if f.endswith('.bin')]
+
+    if bin_files:
+        return jsonify({"found": True, "files": bin_files})
+    else:
+        return jsonify({"found": False, "files": []})
 
 
 if __name__ == '__main__':

@@ -1,10 +1,9 @@
 import './App.css';
-import { MenuInicio } from './features/MenuInicio';
-import imagenCartel from "./components/rutacartel.png"
 import React, { useState, useEffect } from 'react';
 import { indexData } from "../src/services/apiService"
 import { Searcher } from './pages/Searcher';
 import { Crawler } from './pages/Crawler';
+import { Indexer } from './pages/Indexer';
 
 
 // npm install axios
@@ -21,13 +20,6 @@ function App() {
       document.body.style.cursor = 'default';
     };
   }, [loading])
-
-  const handleIndexer = async () =>{
-    var value = await indexData(true);
-    console.log(value.error)
-    console.log(value.output)
-    setText(value.output)
-  }
 
   const renderTextWithLineBreaks = (text) => {
     return text.split('\n').map((line, index) => (
@@ -46,7 +38,7 @@ function App() {
       case "Crawler":
         return <Crawler loading={loading} setLoading={setLoading} />;
       case "Indexer":
-        return <label>INDEXER CONTENT</label>;
+        return <Indexer loading={loading} setLoading={setLoading} />;
       case "Searcher":
         return <Searcher loading={loading} setLoading={setLoading} />;
       default:

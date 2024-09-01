@@ -12,8 +12,6 @@ export function Crawler({loading, setLoading}) {
 
     useEffect(() => {
         getJSONFiles(setFiles);
-        console.log("loading")
-        console.log(loading)
     }, []);
 
     const handleCrawler = async () =>{
@@ -42,7 +40,6 @@ export function Crawler({loading, setLoading}) {
         })
     }
     
-
     return (
         <div className="divCrawler">
             <div className="input-section">

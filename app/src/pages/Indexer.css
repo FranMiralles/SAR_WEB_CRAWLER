@@ -1,0 +1,93 @@
+.divIndexer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.indexer-input-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: top;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.indexer-inputs {
+    width: 676px;
+}
+
+.indexer-input-group {
+    padding-left: 51%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.indexer-input-group-check {
+    width: 24px;
+}
+
+.indexer-input-group-label {
+    font-weight: bold;
+    padding-left: 8px;
+}
+
+.indexer-execute-button {
+    margin-left: 20px;
+    padding: 10px 20px;
+    height: 53px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.indexer-execute-button:hover {
+    background-color: #45a049;
+}
+
+.indexer-binFile-prompt{
+    margin-left: 20px;
+    margin-bottom: 5px;
+    margin-top: 15px;
+}
+
+.indexer-binFile{
+    margin-left: 20px;
+    color: #4CAF50;
+
+}
+
+.indexer-console-output {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 20px;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.indexer-console-output label {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.indexer-console-box {
+    width: 100%;
+    flex-grow: 1;
+    height: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    overflow-y: auto;
+}

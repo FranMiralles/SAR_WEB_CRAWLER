@@ -83,3 +83,15 @@ export const deleteJSONFile = async (file_name) => {
         return ["Error"]
     }
 }
+
+export const getBinFile = async () => {
+    const url = 'http://localhost:5000/api/indexer/check_bin_file';
+
+    try {
+        const response = await axios.get(url, {  });
+        return response.data
+
+    } catch (error) {
+        return ["Error"]
+    }
+}

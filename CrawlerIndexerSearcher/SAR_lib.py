@@ -941,6 +941,7 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
 
+
         res = []
         pterm = term + "$"
 

@@ -16,6 +16,8 @@ export function Searcher({loading, setLoading}) {
       setLoading(true)
       var value = await searchData(query);
       console.log(value)
+      console.log(value.output)
+      console.log(value.error)
       setContent(value.output)
       setLoading(false)
     }else{
@@ -23,14 +25,25 @@ export function Searcher({loading, setLoading}) {
     }
   }
 
-  const renderTextWithLineBreaks = (text) => {
-    return text.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        <br />
-      </React.Fragment>
-    ));
+  const renderTextWithLinks = (text) => {
+    return text.split('\n').map((line, index) => {
+      const urlMatch = line.match(/(.*?):\s*(https?:\/\/\S+)/);
+      if (urlMatch) {
+        const label = urlMatch[1].trim();
+        const url = urlMatch[2].trim();
+
+        return (
+          <React.Fragment>
+            <div className="div-content-result">
+              <label>{label}:</label>
+              <a href={url} target="_blank" rel="noopener noreferrer"> {url} </a>
+            </div>
+          </React.Fragment>
+        );
+      }
+    });
   };
+  
 
   return (
     <div className="divSearcher">
@@ -47,7 +60,7 @@ export function Searcher({loading, setLoading}) {
       <hr className="search-hr" />
       <div className="content-box">
         <label>
-          {loading ? "Cargando..." :renderTextWithLineBreaks(content)}
+          {loading ? "Cargando..." :renderTextWithLinks(content)}
         </label>
       </div>
     </div>

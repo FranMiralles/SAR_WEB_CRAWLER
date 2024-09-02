@@ -96,4 +96,18 @@
     overflow-y: auto;
     text-align: left;
     box-sizing: border-box;
+    background-color: white;
+}
+
+.div-content-result{
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 40px;
+    gap: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+a:visited {
+    color: blue; /* o cualquier color que prefieras */
 }

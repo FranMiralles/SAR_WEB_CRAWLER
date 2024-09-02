@@ -130,10 +130,11 @@ def searcher():
     result = subprocess.run(args, capture_output=True, text=True)
     return jsonify({'output': result.stdout, 'error': result.stderr})
 
+
 @app.route('/api/files', methods=['GET'])
 def get_files():
     try:
-        files = os.listdir(JSONS_DIR)
+        files = [f for f in os.listdir(JSONS_DIR) if f.endswith('.json')]
         return jsonify(files)
     except Exception as e:
         return str(e), 500
@@ -157,6 +158,7 @@ def delete_file():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
 @app.route('/api/indexer/check_bin_file', methods=['GET'])
 def check_bin_files():
     bin_files = [f for f in os.listdir(CRAWLERINDEXERSEARCHER_DIR) if f.endswith('.bin')]

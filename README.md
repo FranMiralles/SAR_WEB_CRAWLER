@@ -10,7 +10,7 @@
 
 ### 2. Instalar un entorno python3 version 3.10.12
 
-### 3. Instalar en la API Flask y Flask-CORS
+### 3. Instalar en la API: Flask y Flask-CORS
 pip install Flask Flask-CORS
 
 ### 4. Instalar node y react para la UI

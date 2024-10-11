@@ -1,3 +1,4 @@
 import distancias
 
-print(distancias.levenshtein_matriz("cadena4", "cadena2"))
+print(distancias.levenshtein_edicion("ejemplo", "campos"))
+print(distancias.levenshtein_edicion("amo", "ano"))

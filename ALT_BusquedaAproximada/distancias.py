@@ -15,6 +15,7 @@ def levenshtein_matriz(x, y, threshold=None):
                 D[i][j - 1] + 1,
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
             )
+    print(D)
     return D[lenX, lenY]
 
 def levenshtein_edicion(x, y, threshold=None):
@@ -38,7 +39,7 @@ def levenshtein_edicion(x, y, threshold=None):
     path = []
     while i > 0 and j > 0:
         # DIAGONAL
-        if(D[i][j] == D[i-1][j-1] or D[i][j] == D[i-1][j-1] + 1):
+        if((D[i][j] == D[i-1][j-1] and x[i-1] == y[j-1]) or D[i][j] == D[i-1][j-1] + 1):
             i -= 1
             j -= 1
             path.append((x[i], y[j]))

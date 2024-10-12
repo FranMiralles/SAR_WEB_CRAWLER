@@ -50,29 +50,85 @@ def levenshtein_edicion(x, y, threshold=None):
         elif(D[i][j] == D[i-1][j] + 1):
             i -= 1
             path.append((x[i], ''))
-
     # Si queda algo en x, son borrados
     while i > 0:
         i -= 1
         path.append((x[i], ''))
-
     # Si queda algo en y, son inserciones
     while j > 0:
         j -= 1
         path.append(('', y[j]))
+
     path.reverse()
     return D[lenX, lenY],path
 
 def levenshtein_reduccion(x, y, threshold=None):
-    # completar versión con reducción coste espacial
-    return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    lenX = len(x)
+    lenY = len(y)
+    filaActual = list(range(lenY + 1))
 
+    # Bucle sobre la palabra x (a transformar)
+    for i in range(1, lenX + 1):
+        filaAnterior = filaActual[:]
+        filaActual[0] = i
+        # Bucle sobre la palabra y (objetivo)
+        for j in range(1, lenY + 1):
+            filaActual[j] = min(
+                filaAnterior[j] + 1,
+                filaActual[j - 1] + 1,
+                filaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+            )
+    
+    return filaActual[-1]
+
+# La estrategia del threshold que utilizamos es que si todos los valores de la fila actual calculada son mayores al threshold, paramos la ejecución ya que o se queda igual o empeora
 def levenshtein(x, y, threshold):
-    # completar versión reducción coste espacial y parada por threshold
-    return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    lenX = len(x)
+    lenY = len(y)
+    filaActual = list(range(lenY + 1))
+    
+    # Bucle sobre la palabra x (a transformar)
+    for i in range(1, lenX + 1):
+        filaAnterior = filaActual[:]
+        filaActual[0] = i
+        minimoEnFila = filaActual[0]
+        # Bucle sobre la palabra y (objetivo)
+        for j in range(1, lenY + 1):
+            filaActual[j] = min(
+                filaAnterior[j] + 1,
+                filaActual[j - 1] + 1,
+                filaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+            )
+            minimoEnFila = min(minimoEnFila, filaActual[j])
+            if(minimoEnFila > threshold):
+                return threshold+1
+
+    return filaActual[-1]
 
 def levenshtein_cota_optimista(x, y, threshold):
-    return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    # Crear el diccionario
+    cota = {}
+    for caracter in x:
+        if cota.get(caracter, None) == None:
+            cota[caracter] = 1
+        else:
+            cota[caracter] += 1
+    for caracter in y:
+        if cota.get(caracter, None) == None:
+            cota[caracter] = -1
+        else:
+            cota[caracter] -= 1
+    valores = cota.values()
+    positivos = 0
+    negativos = 0
+    for valor in valores:
+        if valor > 0:
+            positivos += valor
+        else:
+            negativos += valor
+    if(max(positivos, negativos * -1) > threshold):
+        return threshold + 1
+    return levenshtein(x, y, threshold)
 
 def damerau_restricted_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein restringida con matriz

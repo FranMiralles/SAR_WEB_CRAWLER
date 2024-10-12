@@ -15,7 +15,6 @@ def levenshtein_matriz(x, y, threshold=None):
                 D[i][j - 1] + 1,
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
             )
-    print(D)
     return D[lenX, lenY]
 
 def levenshtein_edicion(x, y, threshold=None):
@@ -101,8 +100,9 @@ def levenshtein(x, y, threshold):
                 filaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
             )
             minimoEnFila = min(minimoEnFila, filaActual[j])
-            if(minimoEnFila > threshold):
-                return threshold+1
+        if(minimoEnFila > threshold):
+            return threshold+1
+        
 
     return filaActual[-1]
 

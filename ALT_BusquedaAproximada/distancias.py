@@ -104,7 +104,7 @@ def levenshtein(x, y, threshold):
             return threshold+1
         
 
-    return filaActual[-1]
+    return columnaActual[-1]
 
 def levenshtein_cota_optimista(x, y, threshold):
     # Crear el diccionario

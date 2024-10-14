@@ -65,41 +65,41 @@ def levenshtein_edicion(x, y, threshold=None):
 def levenshtein_reduccion(x, y, threshold=None):
     lenX = len(x)
     lenY = len(y)
-    filaActual = list(range(lenY + 1))
+    columnaActual = list(range(lenY + 1))
 
     # Bucle sobre la palabra x (a transformar)
     for i in range(1, lenX + 1):
-        filaAnterior = filaActual[:]
-        filaActual[0] = i
+        columnaAnterior = columnaActual[:]
+        columnaActual[0] = i
         # Bucle sobre la palabra y (objetivo)
         for j in range(1, lenY + 1):
-            filaActual[j] = min(
-                filaAnterior[j] + 1,
-                filaActual[j - 1] + 1,
-                filaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+            columnaActual[j] = min(
+                columnaAnterior[j] + 1,
+                columnaActual[j - 1] + 1,
+                columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
             )
     
-    return filaActual[-1]
+    return columnaActual[-1]
 
 # La estrategia del threshold que utilizamos es que si todos los valores de la fila actual calculada son mayores al threshold, paramos la ejecución ya que o se queda igual o empeora
 def levenshtein(x, y, threshold):
     lenX = len(x)
     lenY = len(y)
-    filaActual = list(range(lenY + 1))
+    columnaActual = list(range(lenY + 1))
     
     # Bucle sobre la palabra x (a transformar)
     for i in range(1, lenX + 1):
-        filaAnterior = filaActual[:]
-        filaActual[0] = i
-        minimoEnFila = filaActual[0]
+        columnaAnterior = columnaActual[:]
+        columnaActual[0] = i
+        minimoEnFila = columnaActual[0]
         # Bucle sobre la palabra y (objetivo)
         for j in range(1, lenY + 1):
-            filaActual[j] = min(
-                filaAnterior[j] + 1,
-                filaActual[j - 1] + 1,
-                filaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+            columnaActual[j] = min(
+                columnaAnterior[j] + 1,
+                columnaActual[j - 1] + 1,
+                columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
             )
-            minimoEnFila = min(minimoEnFila, filaActual[j])
+            minimoEnFila = min(minimoEnFila, columnaActual[j])
         if(minimoEnFila > threshold):
             return threshold+1
         

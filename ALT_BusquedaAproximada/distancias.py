@@ -142,16 +142,23 @@ def damerau_restricted_matriz(x, y, threshold=None):
     for j in range(1, lenY + 1):
         D[0][j] = D[0][j - 1] + 1
         for i in range(1, lenX + 1):
-            D[i][j] = min(
-                D[i - 1][j] + 1,
-                D[i][j - 1] + 1,
-                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
-                D[i - 2][j - 2] + 1,
+            if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+                D[i][j] = min(
+                    D[i - 1][j] + 1,
+                    D[i][j - 1] + 1,
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                    D[i - 2][j - 2] + 1,
             )
+            else:
+                D[i][j] = min(
+                    D[i - 1][j] + 1,
+                    D[i][j - 1] + 1,
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                )
     return D[lenX, lenY]
 
 
-    return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    #return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 def damerau_restricted_edicion(x, y, threshold=None):
     # partiendo de damerau_restricted_matriz añadir recuperar

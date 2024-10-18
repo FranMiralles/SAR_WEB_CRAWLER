@@ -214,18 +214,19 @@ def damerau_restricted_edicion(x, y, threshold=None):
     path.reverse()
     return D[lenX, lenY],path
 
-def damerau_restricted(x, y, threshold=None):#ESTÁ MAL
+def damerau_restricted(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
     lenX = len(x)
     lenY = len(y)
     columnaActual = list(range(lenY + 1))
     columnaAnterior = columnaActual[:]
+    columnaActual[0] = 1
     minimoEnFila = columnaActual[0]
     for h in range(1, lenY+1):
         columnaActual[h] = min(
                 columnaAnterior[h] + 1,
                 columnaActual[h - 1] + 1,
-                columnaAnterior[h - 1] + (x[1 - 1] != y[h - 1]),
+                columnaAnterior[h - 1] + (x[0] != y[h - 1]),
             )
         minimoEnFila = min(minimoEnFila, columnaActual[h])
     if(minimoEnFila > threshold):

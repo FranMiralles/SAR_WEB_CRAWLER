@@ -188,16 +188,17 @@ def damerau_intermediate_matriz(x, y, threshold=None):
             )
             
              # Transposición de caracteres adyacentes: ab ↔ ba
-            if i > 1 and j > 1 and x[i - 1] == y[j - 2] and x[i - 2] == y[j - 1]:
+            if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 D[i][j] = min(D[i][j], D[i - 2][j - 2] + 1)
             
-            # Transposición de tres caracteres: acb ↔ ba
-            if i > 2 and j > 2 and x[i - 1] == y[j - 3] and x[i - 3] == y[j - 1]:
-                D[i][j] = min(D[i][j], D[i - 3][j - 3] + 2)
+            # # Transposición de tres caracteres: acb ↔ ba (Costo = 2)
+            # if i > 2 and j > 2 and x[i - 1] == y[j - 3] and x[i - 2] == y[j - 2] and x[i - 3] == y[j - 1]:
+            #     D[i][j] = min(D[i][j], D[i - 3][j - 3] + 2)
             
-            # Transposición con carácter adicional: ab ↔ bca
-            if i > 1 and j > 2 and x[i - 1] == y[j - 2] and x[i - 2] == y[j - 1]:
-                D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
+            # # Transposición con carácter adicional: ab ↔ bca (Costo = 2)
+            # if i > 1 and j > 2 and x[i - 2] == y[j - 3] and x[i - 1] == y[j - 2]:
+            #     D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
+                
     return D[lenX, lenY]
 
 def damerau_intermediate_edicion(x, y, threshold=None):

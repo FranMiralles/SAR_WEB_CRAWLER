@@ -191,13 +191,13 @@ def damerau_intermediate_matriz(x, y, threshold=None):
             if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 D[i][j] = min(D[i][j], D[i - 2][j - 2] + 1)
             
-            # # Transposición de tres caracteres: acb ↔ ba (Costo = 2)
-            # if i > 2 and j > 2 and x[i - 1] == y[j - 3] and x[i - 2] == y[j - 2] and x[i - 3] == y[j - 1]:
-            #     D[i][j] = min(D[i][j], D[i - 3][j - 3] + 2)
+            # Transposición de tres caracteres: acb ↔ ba
+            if i > 2 and j > 1 and x[i - 3] == y[j - 1] and x[i - 1] == y[j - 2]:
+                D[i][j] = min(D[i][j], D[i - 3][j - 2] + 2)
             
-            # # Transposición con carácter adicional: ab ↔ bca (Costo = 2)
-            # if i > 1 and j > 2 and x[i - 2] == y[j - 3] and x[i - 1] == y[j - 2]:
-            #     D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
+            # Transposición con carácter adicional: ab ↔ bca
+            if i > 1 and j > 2 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 3]:
+                D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
                 
     return D[lenX, lenY]
 
@@ -205,6 +205,59 @@ def damerau_intermediate_edicion(x, y, threshold=None):
     # partiendo de matrix_intermediate_damerau añadir recuperar
     # secuencia de operaciones de edición
     # completar versión Damerau-Levenstein intermedia con matriz
+    lenX, lenY = len(x), len(y)
+    D = np.zeros((lenX + 1, lenY + 1), dtype=int)
+    # Añadir la primera columna
+    for i in range(1, lenX + 1):
+        D[i][0] = D[i - 1][0] + 1
+    # Añadir la primera fila
+    for j in range(1, lenY + 1):
+        D[0][j] = D[0][j - 1] + 1
+        # Añadir el resto de la matriz
+        for i in range(1, lenX + 1):
+            D[i][j] = min(
+                D[i - 1][j] + 1,  # Borrado
+                D[i][j - 1] + 1,  # Inserción
+                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),  # Sustitución o match
+            )
+            
+             # Transposición de caracteres adyacentes: ab ↔ ba
+            if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+                D[i][j] = min(D[i][j], D[i - 2][j - 2] + 1)
+            
+            # Transposición de tres caracteres: acb ↔ ba
+            if i > 2 and j > 1 and x[i - 3] == y[j - 1] and x[i - 1] == y[j - 2]:
+                D[i][j] = min(D[i][j], D[i - 3][j - 2] + 2)
+            
+            # Transposición con carácter adicional: ab ↔ bca
+            if i > 1 and j > 2 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 3]:
+                D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
+    
+    path = []
+    while i > 0 and j > 0:
+        # Diagonal
+        if((D[i][j] == D[i - 1][j - 1] and x[i - 1] == y[j - 1]) or (D[i][j] == D[i - 1][j - 1] + 1 and x[i - 1] != x[j - 1])):
+            i -= 1
+            j -= 1
+            path.append((x[i], y[j]))
+        # Inserción
+        elif(D[i][j] == D[i][j-1] + 1):
+            j -= 1
+            path.append(('', y[j]))
+        # Borrado
+        elif(D[i][j] == D[i-1][j] + 1):
+            i -= 1
+            path.append((x[i], ''))
+        # FALTAN MIS CASOS
+        
+    # Si queda algo en x, son borrados
+    while i > 0:
+        i -= 1
+        path.append((x[i], ''))
+    # Si queda algo en y, son inserciones
+    while j > 0:
+        j -= 1
+        path.append(('', y[j]))
     return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTE
     
 def damerau_intermediate(x, y, threshold=None):

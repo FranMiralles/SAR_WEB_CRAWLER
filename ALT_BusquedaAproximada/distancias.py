@@ -134,8 +134,6 @@ def levenshtein_cota_optimista(x, y, threshold):
 def damerau_restricted_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein restringida con matriz
     lenX, lenY = len(x), len(y)
-    # COMPLETAR
-    lenX, lenY = len(x), len(y)
     D = np.zeros((lenX + 1, lenY + 1), dtype=int)
     for i in range(1, lenX + 1):
         D[i][0] = D[i - 1][0] + 1
@@ -158,16 +156,108 @@ def damerau_restricted_matriz(x, y, threshold=None):
     return D[lenX, lenY]
 
 
-    #return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
-
 def damerau_restricted_edicion(x, y, threshold=None):
     # partiendo de damerau_restricted_matriz añadir recuperar
     # secuencia de operaciones de edición
-    return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    lenX, lenY = len(x), len(y)
+    D = np.zeros((lenX + 1, lenY + 1), dtype=int)
+    for i in range(1, lenX + 1):
+        D[i][0] = D[i - 1][0] + 1
+    for j in range(1, lenY + 1):
+        D[0][j] = D[0][j - 1] + 1
+        for i in range(1, lenX + 1):
+            if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+                D[i][j] = min(
+                    D[i - 1][j] + 1,
+                    D[i][j - 1] + 1,
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                    D[i - 2][j - 2] + 1,
+            )
+            else:
+                D[i][j] = min(
+                    D[i - 1][j] + 1,
+                    D[i][j - 1] + 1,
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                )
+    # Hacer el back-tracking
+    i = lenX
+    j = lenY
+    path = []
+    while i > 0 and j > 0:
+        #TRASPONER
+        if(x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2] and D[i][j]==D[i - 2][j - 2] + 1):
+            i -= 2
+            j -= 2
+            path.append((x[i]+x[i+1], y[j]+y[j+1]))
+        # DIAGONAL
+        if((D[i][j] == D[i-1][j-1] and x[i-1] == y[j-1]) or D[i][j] == D[i-1][j-1] + 1):
+            i -= 1
+            j -= 1
+            path.append((x[i], y[j]))
+        # INSERCIÓN
+        elif(D[i][j] == D[i][j-1] + 1):
+            j -= 1
+            path.append(('', y[j]))
+        # BORRADO
+        elif(D[i][j] == D[i-1][j] + 1):
+            i -= 1
+            path.append((x[i], ''))
+    # Si queda algo en x, son borrados
+    while i > 0:
+        i -= 1
+        path.append((x[i], ''))
+    # Si queda algo en y, son inserciones
+    while j > 0:
+        j -= 1
+        path.append(('', y[j]))
+
+    path.reverse()
+    return D[lenX, lenY],path
 
 def damerau_restricted(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
-     return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    lenX = len(x)
+    lenY = len(y)
+    columnaActual = list(range(lenY + 1))
+    columnaAnterior = columnaActual[:]
+    columnaActual[0] = 1
+    minimoEnFila = columnaActual[0]
+    for h in range(1, lenY+1):
+        columnaActual[h] = min(
+                columnaAnterior[h] + 1,
+                columnaActual[h - 1] + 1,
+                columnaAnterior[h - 1] + (x[0] != y[h - 1]),
+            )
+        minimoEnFila = min(minimoEnFila, columnaActual[h])
+    if(minimoEnFila > threshold):
+            return threshold+1
+    # Bucle sobre la palabra x (a transformar)
+    for i in range(2, lenX + 1):
+        columnaDosAnterior = columnaAnterior[:]
+        columnaAnterior = columnaActual[:]
+        columnaActual[0] = i
+        minimoEnFila = columnaActual[0]
+        # Bucle sobre la palabra y (objetivo)
+        for j in range(1, lenY + 1):
+            if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+                columnaActual[j] = min(
+                    columnaAnterior[j] + 1,
+                    columnaActual[j - 1] + 1,
+                    columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+                    columnaDosAnterior[j - 2] + 1,
+                )
+            else:
+                columnaActual[j] = min(
+                    columnaAnterior[j] + 1,
+                    columnaActual[j - 1] + 1,
+                    columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+                )
+            minimoEnFila = min(minimoEnFila, columnaActual[j])
+        if(minimoEnFila > threshold):
+            return threshold+1
+        
+
+    return columnaActual[-1]
 
 def damerau_intermediate_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein intermedia con matriz

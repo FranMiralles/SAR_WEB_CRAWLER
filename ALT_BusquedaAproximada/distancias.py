@@ -81,7 +81,8 @@ def levenshtein_reduccion(x, y, threshold=None):
     
     return columnaActual[-1]
 
-# La estrategia del threshold que utilizamos es que si todos los valores de la fila actual calculada son mayores al threshold, paramos la ejecución ya que o se queda igual o empeora
+# La estrategia del threshold que utilizamos es que si todos los valores de la fila actual
+# calculada son mayores al threshold, paramos la ejecución ya que o se queda igual o empeora
 def levenshtein(x, y, threshold):
     lenX = len(x)
     lenY = len(y)
@@ -292,26 +293,25 @@ def damerau_intermediate_matriz(x, y, threshold=None):
     return D[lenX, lenY]
 
 def damerau_intermediate_edicion(x, y, threshold=None):
-    # partiendo de matrix_intermediate_damerau añadir recuperar
-    # secuencia de operaciones de edición
-    # completar versión Damerau-Levenstein intermedia con matriz
     lenX, lenY = len(x), len(y)
     D = np.zeros((lenX + 1, lenY + 1), dtype=int)
-    # Añadir la primera columna
+    
+    # Inicializar la primera columna y fila
     for i in range(1, lenX + 1):
         D[i][0] = D[i - 1][0] + 1
-    # Añadir la primera fila
     for j in range(1, lenY + 1):
         D[0][j] = D[0][j - 1] + 1
-        # Añadir el resto de la matriz
-        for i in range(1, lenX + 1):
+    
+    # Rellenar la matriz
+    for i in range(1, lenX + 1):
+        for j in range(1, lenY + 1):
             D[i][j] = min(
                 D[i - 1][j] + 1,  # Borrado
                 D[i][j - 1] + 1,  # Inserción
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),  # Sustitución o match
             )
             
-             # Transposición de caracteres adyacentes: ab ↔ ba
+            # Transposición de caracteres adyacentes: ab ↔ ba
             if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 D[i][j] = min(D[i][j], D[i - 2][j - 2] + 1)
             
@@ -323,33 +323,51 @@ def damerau_intermediate_edicion(x, y, threshold=None):
             if i > 1 and j > 2 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 3]:
                 D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
     
+    # Hacer el backtracking
+    i, j = lenX, lenY
     path = []
     while i > 0 and j > 0:
-        # Diagonal
-        if((D[i][j] == D[i - 1][j - 1] and x[i - 1] == y[j - 1]) or (D[i][j] == D[i - 1][j - 1] + 1 and x[i - 1] != x[j - 1])):
+        # Diagonal (sustitución o match)
+        if (D[i][j] == D[i - 1][j - 1] and x[i - 1] == y[j - 1]) or (D[i][j] == D[i - 1][j - 1] + 1 and x[i - 1] != y[j - 1]):
+            path.append((x[i - 1], y[j - 1]))
             i -= 1
             j -= 1
-            path.append((x[i], y[j]))
         # Inserción
-        elif(D[i][j] == D[i][j-1] + 1):
+        elif D[i][j] == D[i][j - 1] + 1:
+            path.append(('', y[j - 1]))
             j -= 1
-            path.append(('', y[j]))
         # Borrado
-        elif(D[i][j] == D[i-1][j] + 1):
+        elif D[i][j] == D[i - 1][j] + 1:
+            path.append((x[i - 1], ''))
             i -= 1
-            path.append((x[i], ''))
-        # FALTAN MIS CASOS
-        
-    # Si queda algo en x, son borrados
+        # Transposición de caracteres adyacentes: ab ↔ ba
+        elif i > 1 and j > 1 and D[i][j] == D[i - 2][j - 2] + 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+            path.append((x[i - 2] + x[i - 1], y[j - 2] + y[j - 1]))
+            i -= 2
+            j -= 2
+        # Transposición de tres caracteres: acb ↔ ba
+        elif i > 2 and j > 1 and D[i][j] == D[i - 3][j - 2] + 2 and x[i - 3] == y[j - 1] and x[i - 1] == y[j - 2]:
+            path.append((x[i - 3] + x[i - 2] + x[i - 1], y[j - 2] + y[j - 1]))
+            i -= 3
+            j -= 2
+        # Transposición con carácter adicional: ab ↔ bca
+        elif i > 1 and j > 2 and D[i][j] == D[i - 2][j - 3] + 2 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 3]:
+            path.append((x[i - 2] + x[i - 1], y[j - 3] + y[j - 2] + y[j - 1]))
+            i -= 2
+            j -= 3
+    
+    # Si quedan caracteres en x, son borrados
     while i > 0:
         i -= 1
         path.append((x[i], ''))
-    # Si queda algo en y, son inserciones
+    # Si quedan caracteres en y, son insertados
     while j > 0:
         j -= 1
         path.append(('', y[j]))
-    return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTE
     
+    path.reverse()
+    return D[lenX, lenY], path
+
 def damerau_intermediate(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
     return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE

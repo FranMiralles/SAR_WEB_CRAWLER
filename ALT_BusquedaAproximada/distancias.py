@@ -369,9 +369,73 @@ def damerau_intermediate_edicion(x, y, threshold=None):
     return D[lenX, lenY], path
 
 def damerau_intermediate(x, y, threshold=None):
-    # versión con reducción coste espacial y parada por threshold
-    return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    # Obtenemos las longitudes de las cadenas de entrada
+    lenX, lenY = len(x), len(y)
+    difX = lenX - lenY
+    
+    # Inicializamos los vectores de trabajo:
+    # vCurrent: vector actual donde calcularemos las distancias mínimas
+    # vPrev: vector previo para almacenar el estado anterior en el cálculo
+    # vPenult y vAntepenult: para guardar valores de estados anteriores necesarios para transposiciones
+    vCurrent = np.zeros(lenX, dtype=int)
+    vPrev = np.arange(1, lenX + 1, dtype=int)  # Inicialización incremental
+    vPenult = np.full(lenX, np.inf, dtype=int) # Simula infinito en enteros para indicar valores no alcanzables
+    vAntepenult = np.full(lenX, np.inf, dtype=int)
 
+    # Iteramos sobre cada carácter de la cadena `y`
+    for j in range(lenY):
+        # Para cada carácter de `y`, iteramos sobre cada carácter de `x`
+        for i in range(lenX):
+            # Si la diferencia de longitud excede el umbral, detenemos la ejecución
+            if difX + j > 0 and vPrev[difX + j - 1] > threshold:
+                return threshold + 1
+
+            # Calcular la distancia en el primer elemento
+            if i == 0:
+                # Mínimo entre el valor acumulado de inserción, borrado, y sustitución
+                vCurrent[0] = min(
+                    j + (x[i] != y[j]),
+                    vPrev[i] + 1
+                )
+            else:
+                # Para posiciones posteriores, consideramos también las operaciones básicas
+                vCurrent[i] = min(
+                    vCurrent[i - 1] + 1,            # Inserción
+                    vPrev[i] + 1,                   # Borrado
+                    vPrev[i - 1] + (x[i] != y[j])   # Sustitución o coincidencia
+                )
+
+            # Evaluamos la transposición de caracteres adyacentes simples: `ab` ↔ `ba`
+            if i > 0 and j > 0 and x[i - 1] == y[j] and x[i] == y[j - 1]:
+                # Transposición en la posición inicial
+                if i == 1:
+                    vCurrent[i] = min(vCurrent[i], j)
+                else:
+                    vCurrent[i] = min(vCurrent[i], vPenult[i - 2] + 1)
+
+            # Transposición de tres caracteres: `acb` ↔ `ba`
+            if i > 1 and j > 0 and x[i - 2] == y[j] and x[i] == y[j - 1]:
+                if i == 2:
+                    vCurrent[i] = min(vCurrent[i], j + 1)
+                else:
+                    vCurrent[i] = min(vCurrent[i], vPenult[i - 3] + 2)
+
+            # Transposición con un carácter adicional: `ab` ↔ `bca`
+            if i > 0 and j > 1 and x[i - 1] == y[j] and x[i] == y[j - 2]:
+                if i == 1:
+                    vCurrent[i] = min(vCurrent[i], j)
+                else:
+                    vCurrent[i] = min(vCurrent[i], vAntepenult[i - 2] + 2)
+
+        # Actualizamos los vectores para la siguiente iteración
+        vAntepenult, vPenult = vPenult, vAntepenult
+        vPenult, vPrev = vPrev, vPenult
+        vPrev, vCurrent = vCurrent, vPrev
+
+    # Devolvemos la distancia mínima encontrada en el último elemento de `vPrev`
+    return vPrev[-1]
+
+    
 opcionesSpell = {
     'levenshtein_m': levenshtein_matriz,
     'levenshtein_r': levenshtein_reduccion,

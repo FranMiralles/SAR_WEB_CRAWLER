@@ -323,7 +323,7 @@ def damerau_intermediate_edicion(x, y, threshold=None):
             if i > 1 and j > 2 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 3]:
                 D[i][j] = min(D[i][j], D[i - 2][j - 3] + 2)
     
-    # Hacer el backtracking
+    # Hacer el camino
     i, j = lenX, lenY
     path = []
     while i > 0 and j > 0:

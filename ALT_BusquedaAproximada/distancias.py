@@ -101,7 +101,7 @@ def levenshtein(x, y, threshold=None):
                 columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
             )
             minimoEnFila = min(minimoEnFila, columnaActual[j])
-        if(minimoEnFila > threshold):
+        if(threshold != None and minimoEnFila > threshold):
             return threshold+1
         
 
@@ -128,7 +128,7 @@ def levenshtein_cota_optimista(x, y, threshold=None):
             positivos += valor
         else:
             negativos += valor
-    if(max(positivos, negativos * -1) > threshold):
+    if(threshold != None and max(positivos, negativos * -1) > threshold):
         return threshold + 1
     return levenshtein(x, y, threshold)
 

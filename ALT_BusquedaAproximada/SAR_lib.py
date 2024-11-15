@@ -7,6 +7,8 @@ import math
 from pathlib import Path
 from typing import Optional, List, Union, Dict
 import pickle
+from spellsuggester import *
+from distancias import *
 
 ##################################################
 ##                                              ##
@@ -32,8 +34,9 @@ class SAR_Indexer:
     # numero maximo de documento a mostrar cuando self.show_all es False
     SHOW_MAX = 10
 
+
     all_atribs = ['urls', 'index', 'sindex', 'ptindex', 'docs', 'weight', 'articles',
-                  'tokenizer', 'stemmer', 'show_all', 'use_stemming']
+                  'tokenizer', 'stemmer', 'show_all', 'use_stemming', 'use_spelling', 'speller']
 
     def __init__(self, **args):
         """
@@ -61,6 +64,8 @@ class SAR_Indexer:
         self.show_snippet = False # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False # valor por defecto, se cambia con self.set_stemming()
         # ALT - COMPLETAR
+        self.use_spelling = False 
+        self.speller = None
 
     ###############################
     ###                         ###
@@ -284,7 +289,9 @@ class SAR_Indexer:
                 "threshold" entero, umbral del corrector
         """
         
-        # ALT - COMPLETAR        
+        # ALT - COMPLETAR    
+        self.use_spelling = use_spelling
+        self.spelled = SpellSuggester(default_distance = distance, default_threshold=threshold, vocab =  list(self.index.keys()), dist_functions=opcionesSpell)
         pass
 
     def tokenize(self, text:str):
@@ -437,8 +444,16 @@ class SAR_Indexer:
 
         # ALT - MODIFICAR
         term = term.lower()
-        r1 = self.index[field].get(term, [])
-        return r1
+        res=[]
+        if self.use_spelling and term not in self.index:
+            palabras = self.speller.suggest(term=term)
+        if len(palabras) != 0:
+            for palabra in palabras:
+                r1 = self.index[field].get(palabra, [])
+                res.append(r1)
+        else:
+            res = self.index[field].get(term, [])
+        return res
 
 
     def reverse_posting(self, p:list):

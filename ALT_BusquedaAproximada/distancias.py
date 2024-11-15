@@ -167,7 +167,7 @@ def damerau_restricted_edicion(x, y, threshold=None):
     for j in range(1, lenY + 1):
         D[0][j] = D[0][j - 1] + 1
         for i in range(1, lenX + 1):
-            if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+            if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 D[i][j] = min(
                     D[i - 1][j] + 1,
                     D[i][j - 1] + 1,
@@ -219,8 +219,8 @@ def damerau_restricted(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
     lenX = len(x)
     lenY = len(y)
-    columnaActual = list(range(lenY + 1))
-    columnaAnterior = columnaActual[:]
+    columnaActual = np.arange(lenY + 1, dtype= int) 
+    columnaAnterior = columnaActual.copy()
     columnaActual[0] = 1
     minimoEnFila = columnaActual[0]
     for h in range(1, lenY+1):
@@ -234,13 +234,13 @@ def damerau_restricted(x, y, threshold=None):
             return threshold+1
     # Bucle sobre la palabra x (a transformar)
     for i in range(2, lenX + 1):
-        columnaDosAnterior = columnaAnterior[:]
-        columnaAnterior = columnaActual[:]
+        columnaDosAnterior = columnaAnterior.copy()
+        columnaAnterior = columnaActual.copy()
         columnaActual[0] = i
         minimoEnFila = columnaActual[0]
         # Bucle sobre la palabra y (objetivo)
         for j in range(1, lenY + 1):
-            if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
+            if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 columnaActual[j] = min(
                     columnaAnterior[j] + 1,
                     columnaActual[j - 1] + 1,

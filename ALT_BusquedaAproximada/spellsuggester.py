@@ -74,15 +74,20 @@ class SpellSuggester:
         ########################################
         # COMPLETAR
         ########################################
+        # Inicialización de la lista de resultados
         resul = []
         for _ in range(threshold + 1):
             resul.append([])
+
+        # Cálculo de distancias y llenado de la lista de resultados
         for word in self.vocabulary:
             distancia = self.distance_functions[distance](term, word, threshold)
             if distancia <= threshold:
                 resul[distancia].append(word)
+
+        # Aplanamiento de la lista de resultados si es necesario
         if flatten:
             resul = [word for wlist in resul for word in wlist]
-            
+
         return resul
 

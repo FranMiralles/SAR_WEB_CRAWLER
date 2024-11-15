@@ -75,10 +75,12 @@ class SpellSuggester:
         # COMPLETAR
         ########################################
         resul = []
+        for _ in range(threshold + 1):
+            resul.append([])
         for word in self.vocabulary:
             distancia = self.distance_functions[distance](term, word, threshold)
             if distancia <= threshold:
-                resul.append(word)
+                resul[distancia].append(word)
         if flatten:
             resul = [word for wlist in resul for word in wlist]
             

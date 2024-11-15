@@ -373,15 +373,15 @@ def damerau_intermediate(x, y, threshold=None):
     # Obtenemos las longitudes de las cadenas de entrada
     lenX, lenY = len(x), len(y)
     difX = lenX - lenY
-    
+    INF = 10**6
     # Inicializamos los vectores de trabajo:
     # vCurrent: vector actual donde calcularemos las distancias mínimas
     # vPrev: vector previo para almacenar el estado anterior en el cálculo
     # vPenult y vAntepenult: para guardar valores de estados anteriores necesarios para transposiciones
     vCurrent = np.zeros(lenX, dtype=int)
     vPrev = np.arange(1, lenX + 1, dtype=int)  # Inicialización incremental
-    vPenult = np.full(lenX, np.inf, dtype=int) # Simula infinito en enteros para indicar valores no alcanzables
-    vAntepenult = np.full(lenX, np.inf, dtype=int)
+    vPenult = np.full(lenX, INF, dtype=int) # Simula infinito en enteros para indicar valores no alcanzables
+    vAntepenult = np.full(lenX, INF, dtype=int)
 
     # Iteramos sobre cada carácter de la cadena `y`
     for j in range(lenY):

@@ -83,7 +83,7 @@ def levenshtein_reduccion(x, y, threshold=None):
 
 # La estrategia del threshold que utilizamos es que si todos los valores de la fila actual
 # calculada son mayores al threshold, paramos la ejecución ya que o se queda igual o empeora
-def levenshtein(x, y, threshold):
+def levenshtein(x, y, threshold=None):
     lenX = len(x)
     lenY = len(y)
     columnaActual = list(range(lenY + 1))
@@ -107,7 +107,7 @@ def levenshtein(x, y, threshold):
 
     return columnaActual[-1]
 
-def levenshtein_cota_optimista(x, y, threshold):
+def levenshtein_cota_optimista(x, y, threshold=None):
     # Crear el diccionario
     cota = {}
     for caracter in x:

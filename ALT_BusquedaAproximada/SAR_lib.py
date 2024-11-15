@@ -291,7 +291,7 @@ class SAR_Indexer:
         
         # ALT - COMPLETAR    
         self.use_spelling = use_spelling
-        self.spelled = SpellSuggester(default_distance = distance, default_threshold=threshold, vocab =  list(self.index.keys()), dist_functions=opcionesSpell)
+        self.spelled = SpellSuggester(default_distance = distance, default_threshold=threshold, vocab =  list(self.index['all'].keys()), dist_functions=opcionesSpell)
         pass
 
     def tokenize(self, text:str):
@@ -447,7 +447,7 @@ class SAR_Indexer:
         res=[]
         if self.use_spelling and term not in self.index:
             palabras = self.speller.suggest(term=term)
-        if len(palabras) != 0:
+        if palabras and len(palabras) != 0:
             for palabra in palabras:
                 r1 = self.index[field].get(palabra, [])
                 res.append(r1)

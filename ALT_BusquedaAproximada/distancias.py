@@ -369,6 +369,7 @@ def damerau_intermediate_edicion(x, y, threshold=None):
     return D[lenX, lenY], path
 
 def damerau_intermediate(x, y, threshold=None):
+    # versión con reducción coste espacial y parada por threshold
     # Obtenemos las longitudes de las cadenas de entrada
     lenX, lenY = len(x), len(y)
     difX = lenX - lenY
@@ -384,29 +385,28 @@ def damerau_intermediate(x, y, threshold=None):
 
     # Iteramos sobre cada carácter de la cadena `y`
     for j in range(lenY):
+        # Si la diferencia de longitud excede el umbral, detenemos la ejecución
+        if difX + j > 0 and vPrev[difX + j - 1] > threshold:
+            return threshold + 1
+        
+        # Calcular la distancia en el primer elemento
+        # Mínimo entre el valor acumulado de inserción, borrado, y sustitución
+        vCurrent[0] = min(
+            j + (x[0] != y[j]),
+            vPrev[0] + 1
+        )
+        
         # Para cada carácter de `y`, iteramos sobre cada carácter de `x`
-        for i in range(lenX):
-            # Si la diferencia de longitud excede el umbral, detenemos la ejecución
-            if difX + j > 0 and vPrev[difX + j - 1] > threshold:
-                return threshold + 1
-
-            # Calcular la distancia en el primer elemento
-            if i == 0:
-                # Mínimo entre el valor acumulado de inserción, borrado, y sustitución
-                vCurrent[0] = min(
-                    j + (x[i] != y[j]),
-                    vPrev[i] + 1
-                )
-            else:
-                # Para posiciones posteriores, consideramos también las operaciones básicas
-                vCurrent[i] = min(
-                    vCurrent[i - 1] + 1,            # Inserción
-                    vPrev[i] + 1,                   # Borrado
-                    vPrev[i - 1] + (x[i] != y[j])   # Sustitución o coincidencia
-                )
+        for i in range(1, lenX):
+            # Para posiciones posteriores, consideramos también las operaciones básicas
+            vCurrent[i] = min(
+                vCurrent[i - 1] + 1,            # Inserción
+                vPrev[i] + 1,                   # Borrado
+                vPrev[i - 1] + (x[i] != y[j])   # Sustitución o coincidencia
+            )
 
             # Evaluamos la transposición de caracteres adyacentes simples: `ab` ↔ `ba`
-            if i > 0 and j > 0 and x[i - 1] == y[j] and x[i] == y[j - 1]:
+            if j > 0 and x[i - 1] == y[j] and x[i] == y[j - 1]:
                 # Transposición en la posición inicial
                 if i == 1:
                     vCurrent[i] = min(vCurrent[i], j)
@@ -421,7 +421,7 @@ def damerau_intermediate(x, y, threshold=None):
                     vCurrent[i] = min(vCurrent[i], vPenult[i - 3] + 2)
 
             # Transposición con un carácter adicional: `ab` ↔ `bca`
-            if i > 0 and j > 1 and x[i - 1] == y[j] and x[i] == y[j - 2]:
+            if j > 1 and x[i - 1] == y[j] and x[i] == y[j - 2]:
                 if i == 1:
                     vCurrent[i] = min(vCurrent[i], j)
                 else:

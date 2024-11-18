@@ -135,24 +135,29 @@ def levenshtein_cota_optimista(x, y, threshold=None):
 def damerau_restricted_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein restringida con matriz
     lenX, lenY = len(x), len(y)
+    #Crear matriz con todo 0
     D = np.zeros((lenX + 1, lenY + 1), dtype=int)
+    #Completar primera columna
     for i in range(1, lenX + 1):
         D[i][0] = D[i - 1][0] + 1
+    #Completar primera fila
     for j in range(1, lenY + 1):
         D[0][j] = D[0][j - 1] + 1
+        #Aplicamos la formula
         for i in range(1, lenX + 1):
             if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 D[i][j] = min(
-                    D[i - 1][j] + 1,
-                    D[i][j - 1] + 1,
-                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
-                    D[i - 2][j - 2] + 1,
+                    D[i - 1][j] + 1, #Borrado
+                    D[i][j - 1] + 1, #Inserción
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), #Sustitución
+                    D[i - 2][j - 2] + 1, #Trasponer
             )
+            #Si no se puede trasponer
             else:
                 D[i][j] = min(
-                    D[i - 1][j] + 1,
-                    D[i][j - 1] + 1,
-                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                    D[i - 1][j] + 1, #Borrado
+                    D[i][j - 1] + 1, #Inserción
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), #Sustitución
                 )
     return D[lenX, lenY]
 
@@ -161,24 +166,29 @@ def damerau_restricted_edicion(x, y, threshold=None):
     # partiendo de damerau_restricted_matriz añadir recuperar
     # secuencia de operaciones de edición
     lenX, lenY = len(x), len(y)
+    #Crear matriz con todo 0
     D = np.zeros((lenX + 1, lenY + 1), dtype=int)
+    #Completar primera columna
     for i in range(1, lenX + 1):
         D[i][0] = D[i - 1][0] + 1
+    #Completar primera fila
     for j in range(1, lenY + 1):
         D[0][j] = D[0][j - 1] + 1
+        #Aplicamos la formula
         for i in range(1, lenX + 1):
             if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 D[i][j] = min(
-                    D[i - 1][j] + 1,
-                    D[i][j - 1] + 1,
-                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
-                    D[i - 2][j - 2] + 1,
+                    D[i - 1][j] + 1, #Borrado
+                    D[i][j - 1] + 1, #Inserción
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), #Sustitución
+                    D[i - 2][j - 2] + 1, #Trasponer
             )
+            #Si no se puede trasponer
             else:
                 D[i][j] = min(
-                    D[i - 1][j] + 1,
-                    D[i][j - 1] + 1,
-                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                    D[i - 1][j] + 1, #Borrado
+                    D[i][j - 1] + 1, #Inserción
+                    D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), #Sustitución
                 )
     # Hacer el back-tracking
     i = lenX
@@ -219,8 +229,10 @@ def damerau_restricted(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
     lenX = len(x)
     lenY = len(y)
+    #Creamos la primera columna y la guardamos en columnaAnterior
     columnaActual = np.arange(lenY + 1, dtype= int) 
     columnaAnterior = columnaActual.copy()
+    #Hacemos la segunda columna y la guardamos en columnaActual
     columnaActual[0] = 1
     minimoEnFila = columnaActual[0]
     for h in range(1, lenY+1):
@@ -230,30 +242,33 @@ def damerau_restricted(x, y, threshold=None):
                 columnaAnterior[h - 1] + (x[0] != y[h - 1]),
             )
         minimoEnFila = min(minimoEnFila, columnaActual[h])
+    #Fin por threshold
     if(minimoEnFila > threshold):
             return threshold+1
     # Bucle sobre la palabra x (a transformar)
     for i in range(2, lenX + 1):
         columnaDosAnterior = columnaAnterior.copy()
         columnaAnterior = columnaActual.copy()
+        #Para que la fila 0 vaya desde 0 a lenX
         columnaActual[0] = i
         minimoEnFila = columnaActual[0]
         # Bucle sobre la palabra y (objetivo)
         for j in range(1, lenY + 1):
             if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
                 columnaActual[j] = min(
-                    columnaAnterior[j] + 1,
-                    columnaActual[j - 1] + 1,
-                    columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
-                    columnaDosAnterior[j - 2] + 1,
+                    columnaAnterior[j] + 1, #Borrado
+                    columnaActual[j - 1] + 1, #Inserción
+                    columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]), #Sustitución
+                    columnaDosAnterior[j - 2] + 1, #Trasponer
                 )
             else:
                 columnaActual[j] = min(
-                    columnaAnterior[j] + 1,
-                    columnaActual[j - 1] + 1,
-                    columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]),
+                    columnaAnterior[j] + 1, #Borrado
+                    columnaActual[j - 1] + 1, #Inserción
+                    columnaAnterior[j - 1] + (x[i - 1] != y[j - 1]), #Sustitución
                 )
             minimoEnFila = min(minimoEnFila, columnaActual[j])
+        #Fin por threshold
         if(minimoEnFila > threshold):
             return threshold+1
         

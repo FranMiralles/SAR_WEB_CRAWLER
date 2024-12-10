@@ -201,7 +201,7 @@ def damerau_restricted_edicion(x, y, threshold=None):
             j -= 2
             path.append((x[i]+x[i+1], y[j]+y[j+1]))
         # DIAGONAL
-        if((D[i][j] == D[i-1][j-1] and x[i-1] == y[j-1]) or D[i][j] == D[i-1][j-1] + 1):
+        elif((D[i][j] == D[i-1][j-1] and x[i-1] == y[j-1]) or D[i][j] == D[i-1][j-1] + 1):
             i -= 1
             j -= 1
             path.append((x[i], y[j]))

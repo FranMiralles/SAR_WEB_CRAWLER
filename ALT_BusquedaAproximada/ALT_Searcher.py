@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-t', '--threshold', dest='threshold', action='store', type=int, default=None, 
                     help='threshold for the spelling correction.')
-    parser.add_argument('-d', '--distance', dest='distance', action='store', default=None, choices=['levenstein', 'damerau_r', 'damerau_i'],
+    parser.add_argument('-d', '--distance', dest='distance', action='store', default=None, choices=['levenshtein', 'damerau_r', 'damerau_i'],
                     help='distance function for the spelling correction.')
 
     parser.add_argument('-s', '--spell', dest='spell', action='store_true', default=False,

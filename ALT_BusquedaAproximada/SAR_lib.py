@@ -291,8 +291,20 @@ class SAR_Indexer:
         
         # ALT - COMPLETAR    
         self.use_spelling = use_spelling
-        self.spelled = SpellSuggester(default_distance = distance, default_threshold=threshold, vocab =  list(self.index['all'].keys()), dist_functions=opcionesSpell)
-        pass
+        self.distance = distance
+        self.threshold = threshold
+
+        if use_spelling:
+            # Reconstruir el speller con el vocabulario actual
+            vocabulario = list(self.index['all'].keys())
+            self.speller = SpellSuggester(
+                default_distance=distance,
+                default_threshold=threshold,
+                vocab=vocabulario,
+                dist_functions=opcionesSpell
+            )
+        else:
+            self.speller = None
 
     def tokenize(self, text:str):
         """
@@ -444,16 +456,22 @@ class SAR_Indexer:
 
         # ALT - MODIFICAR
         term = term.lower()
-        res=[]
-        if self.use_spelling and term not in self.index:
-            palabras = self.speller.suggest(term=term)
-        if palabras and len(palabras) != 0:
-            for palabra in palabras:
-                r1 = self.index[field].get(palabra, [])
-                res.append(r1)
-        else:
-            res = self.index[field].get(term, [])
-        return res
+        # Intentamos obtener la posting list del término exacto
+        posting = self.index[field].get(term, [])
+
+        if not posting and self.use_spelling:
+            # El término no existe, intentamos corrección ortográfica
+            sugerencias = self.speller.suggest(term=term, distance=self.distance, threshold=self.threshold)
+            
+            # Unimos las posting list de todas las sugerencias
+            posting_sugerencias = []
+            for palabra_sugerida in sugerencias:
+                posting_sugerencias += self.index[field].get(palabra_sugerida, [])
+            
+            # Eliminamos duplicados
+            posting = list(set(posting_sugerencias))
+
+        return posting
 
 
     def reverse_posting(self, p:list):
